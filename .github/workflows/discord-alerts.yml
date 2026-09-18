@@ -2,12 +2,9 @@ name: Nightshades Discord alerts
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "*/5 * * * *"
-  push:
-    paths:
-      - ".github/workflows/discord-alerts.yml"
 
+# Automatic monitoring migrated to Vercel Workflows.
+# This workflow is kept manual-only as a fallback/test path.
 permissions:
   contents: write
 
