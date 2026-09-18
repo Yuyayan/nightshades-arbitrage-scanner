@@ -1,4 +1,4 @@
-name: Probe Market APIs
+name: Probe CORS
 on:
   push:
     paths:
@@ -10,19 +10,21 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Probe OpenSea and public pages
+      - name: Probe CORS
         run: |
           set +e
-          for slug in nightshades-ghosts nightshades-watchers nightshades-knights nightshades-zombies; do
-            echo "=== $slug V2 stats ===" > "probe-$slug.txt"
-            curl -i -sS --max-time 20 "https://api.opensea.io/api/v2/collections/$slug/stats" >> "probe-$slug.txt"
-            echo "\n=== page grep ===" >> "probe-$slug.txt"
-            curl -sS --max-time 20 "https://opensea.io/collection/$slug" | head -c 200000 | grep -Eo '.{0,100}(floor|floorPrice|floor_price).{0,160}' | head -20 >> "probe-$slug.txt"
-          done
+          {
+            echo "=== OpenSea ==="
+            curl -i -sS --max-time 20 -H 'Origin: https://yuyayan.github.io' 'https://api.opensea.io/api/v2/collections/nightshades-ghosts/stats' | head -60
+            echo "=== MCP ==="
+            curl -i -sS --max-time 20 -H 'Origin: https://yuyayan.github.io' -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+              -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"nightshades","arguments":{}}}' \
+              'https://laura.stonkbrokers.io/api/mcp' | head -60
+          } > probe-cors.txt
       - name: Commit probe
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add probe-nightshades-*.txt
-          git commit -m "Probe OpenSea Nightshades floor endpoints" || exit 0
+          git add probe-cors.txt
+          git commit -m "Probe CORS headers" || exit 0
           git push
