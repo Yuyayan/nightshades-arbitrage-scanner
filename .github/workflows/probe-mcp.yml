@@ -1,0 +1,24 @@
+name: Probe Nightshades MCP
+on:
+  push:
+    paths:
+      - ".github/workflows/probe-mcp.yml"
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe MCP
+        run: |
+          curl -sS --max-time 30 https://laura.stonkbrokers.io/api/mcp             -H 'content-type: application/json'             -H 'accept: application/json, text/event-stream'             -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"nightshades","arguments":{}}}'             > probe-nightshades.txt
+          curl -sS --max-time 30 https://laura.stonkbrokers.io/api/mcp             -H 'content-type: application/json'             -H 'accept: application/json, text/event-stream'             -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"nft_market","arguments":{}}}'             > probe-nft-market.txt
+          printf '\n--- headers omitted ---\n' >> probe-nightshades.txt
+      - name: Commit probe
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add probe-nightshades.txt probe-nft-market.txt
+          git commit -m "Probe live Nightshades MCP response" || exit 0
+          git push
