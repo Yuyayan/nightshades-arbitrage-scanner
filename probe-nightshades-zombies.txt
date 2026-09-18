@@ -1,0 +1,49 @@
+=== nightshades-zombies V2 stats ===
+HTTP/2 200 
+date: Fri, 18 Sep 2026 02:36:30 GMT
+content-type: application/json
+content-length: 567
+cache-control: public, max-age=60, stale-while-revalidate=30
+vary: Origin, accept-encoding
+x-trace-id: 3393320678936881426
+x-ratelimit-limit: 120
+x-ratelimit-remaining: 119
+x-ratelimit-reset: 1789698994
+accept-ranges: bytes
+set-cookie: __cf_bm=N3CbpnQRFFR.g_aE5UNo7vHRasPvxcitAWthX_86INI-1789698990.2611885-1.0.1.1-O_b1r8QNfIbQtelXwjgPH86kThA74YDJ0jZW291_VZmcBhF7SvzJSqf_gdFTle2CP_C8BPHeiZxfJ6D6eb_.C1ipPkt..GNo3Nf4iVaOOS11ob0gHazieoC9FsITEAWJ; HttpOnly; SameSite=None; Secure; Path=/; Domain=opensea.io; Expires=Fri, 18 Sep 2026 03:06:30 GMT
+last-modified: Fri, 18 Sep 2026 02:36:30 GMT
+cf-cache-status: HIT
+strict-transport-security: max-age=15552000; includeSubDomains; preload
+x-content-type-options: nosniff
+server: cloudflare
+cf-ray: a3ccf6a11aafe1d3-ORD
+alt-svc: h3=":443"; ma=86400
+
+{
+  "total" : {
+    "volume" : 11.414886269996996,
+    "volume_symbol" : "ETH",
+    "sales" : 192,
+    "num_owners" : 400,
+    "floor_price" : 0.0499618,
+    "floor_price_symbol" : "ETH"
+  },
+  "intervals" : [ {
+    "interval" : "one_day",
+    "volume" : 0.5236158999989999,
+    "volume_symbol" : "ETH",
+    "sales" : 13
+  }, {
+    "interval" : "seven_day",
+    "volume" : 11.414886269996995,
+    "volume_symbol" : "ETH",
+    "sales" : 192
+  }, {
+    "interval" : "thirty_day",
+    "volume" : 11.414886269996995,
+    "volume_symbol" : "ETH",
+    "sales" : 192
+  } ]
+}\n=== page grep ===
+"hasNext":false,"data":{"collectionBySlug":{"__typename":"Collection","slug":"nightshades-zombies","floorPrice":{"pricePerItem":{"token":{"unit":0.0499618,"symbol":"ETH","__typename":"TokenPrice","contractAddress":"0x0000000000000000000000000000000000000000","chain":{"i
+tem"}],"stats":{"uniqueItemCount":3000,"__typename":"CollectionStats","totalSupply":3000,"oneDay":{"floorPriceChange":0.5613,"__typename":"CollectionRollingStats","volume":{"usd":1279.317772841561,"native":{"symbol":"ETH","unit":0.5236158999989999,"__typename":"TokenPri

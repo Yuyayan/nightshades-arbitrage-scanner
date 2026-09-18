@@ -1,0 +1,47 @@
+=== nightshades-watchers V2 stats ===
+HTTP/2 200 
+date: Fri, 18 Sep 2026 02:36:29 GMT
+content-type: application/json
+content-length: 546
+cache-control: public, max-age=60, stale-while-revalidate=30
+vary: Origin, accept-encoding
+x-trace-id: 2639817858441558634
+x-ratelimit-limit: 120
+x-ratelimit-remaining: 114
+x-ratelimit-reset: 1789699004
+accept-ranges: bytes
+set-cookie: __cf_bm=_06y6FgTXMxg6Yk9HdLPcPlBFKpCYmhDTLn4pd5FaPI-1789698989.193335-1.0.1.1-zf6XtgGNRN2DDx248AngAkmIyNpVrkQH1eoYkcFhT0YMJPTtlON8kQFn.nXyHTA0xVMh1orRvUXBXZHmagrRGzIK9iO81om3KiDTYH7O.Q697o_QIMX34OBGdFhcng57; HttpOnly; SameSite=None; Secure; Path=/; Domain=opensea.io; Expires=Fri, 18 Sep 2026 03:06:29 GMT
+last-modified: Fri, 18 Sep 2026 02:36:29 GMT
+cf-cache-status: HIT
+strict-transport-security: max-age=15552000; includeSubDomains; preload
+x-content-type-options: nosniff
+server: cloudflare
+cf-ray: a3ccf69a6d8bb32d-MSP
+alt-svc: h3=":443"; ma=86400
+
+{
+  "total" : {
+    "volume" : 7.634225579799995,
+    "volume_symbol" : "ETH",
+    "sales" : 128,
+    "num_owners" : 206,
+    "floor_price" : 0.055,
+    "floor_price_symbol" : "ETH"
+  },
+  "intervals" : [ {
+    "interval" : "one_day",
+    "volume" : 0.325,
+    "volume_symbol" : "ETH",
+    "sales" : 7
+  }, {
+    "interval" : "seven_day",
+    "volume" : 7.634225579799997,
+    "volume_symbol" : "ETH",
+    "sales" : 128
+  }, {
+    "interval" : "thirty_day",
+    "volume" : 7.634225579799997,
+    "volume_symbol" : "ETH",
+    "sales" : 128
+  } ]
+}\n=== page grep ===
