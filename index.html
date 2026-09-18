@@ -133,13 +133,22 @@ async function fetchNightshades(){
 }
 async function fetchMarket(){
  const urls=[
+  "https://nightshades-arbitrage-monitor-yuyas-projects-e92841bc.vercel.app/api/market?t="+Date.now(),
   "https://raw.githubusercontent.com/Yuyayan/nightshades-arbitrage-scanner/main/floors.json?t="+Date.now(),
   "./floors.json?t="+Date.now()
  ];
  let lastError=null;
  for(const url of urls){
-  try{const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw new Error("market HTTP "+res.status);return await res.json()}
-  catch(e){lastError=e}
+  try{
+   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),18000);
+   try{
+    const res=await fetch(url,{cache:"no-store",signal:controller.signal});
+    if(!res.ok)throw new Error("market HTTP "+res.status);
+    const data=await res.json();
+    data.fetchSource=url.includes("vercel.app")?"live":"cache";
+    return data;
+   }finally{clearTimeout(timeout)}
+  }catch(e){lastError=e}
  }
  throw lastError||new Error("OpenSeaデータ取得失敗");
 }
@@ -305,7 +314,7 @@ async function refresh(){
   render(rows,live,market);
   document.getElementById("dot").className="dot ok";
   document.getElementById("statusText").textContent="正常 · Token 4/4 · Floor 4/4 · Offer 4/4";
-  document.getElementById("statusDetail").textContent="Tax "+((live.snipeTaxBps||0)/100).toFixed(1)+"% · OpenSea "+Math.max(0,marketAge).toFixed(1)+"分前";
+  document.getElementById("statusDetail").textContent="Tax "+((live.snipeTaxBps||0)/100).toFixed(1)+"% · OpenSea "+(market.fetchSource==="live"?"LIVE":"CACHE")+" "+Math.max(0,marketAge).toFixed(1)+"分前";
   document.getElementById("updated").textContent=new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
   lastRaw={rows:rows.map(x=>({faction:x.f.id,price:x.price,floor:x.floor,offer:x.topOffer,targetOffer:x.guide.target,maxOffer:x.guide.maxOffer})),live,market,marketAge};
   document.getElementById("diag").textContent=JSON.stringify(lastRaw,null,2);
