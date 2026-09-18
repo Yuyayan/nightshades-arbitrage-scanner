@@ -125,32 +125,31 @@ jobs:
               creator_fees != old_fees
           )
 
+          checked_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
           data = {
               "source": "OpenSea public collection data",
               "floors": floors,
               "offers": offers,
               "creatorFeeBps": creator_fees,
               "updatedAt": (
-                  datetime.datetime.now(datetime.timezone.utc).isoformat()
+                  checked_at
                   if market_changed or not old.get("updatedAt")
                   else old["updatedAt"]
               ),
+              "checkedAt": checked_at,
               "floorComplete": sum(isinstance(v, (int, float)) for v in floors.values()),
               "offerComplete": sum(isinstance(v, (int, float)) for v in offers.values()),
               "errors": errors,
           }
 
-          if market_changed or not path.exists():
-              path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
-              print("market changed:", data)
-          else:
-              print("no market changes:", data)
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+          print("market checked:", data)
           PY
 
       - name: Commit changed market data
         run: |
           if [ -z "$(git status --porcelain -- floors.json)" ]; then
-            echo "No market changes."
+            echo "No cache timestamp change."
             exit 0
           fi
           git config user.name "github-actions[bot]"
