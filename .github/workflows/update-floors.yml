@@ -120,7 +120,7 @@ jobs:
 
       - name: Commit changed floors
         run: |
-          if git diff --quiet -- floors.json && [ -f floors.json ]; then
+          if [ -z "$(git status --porcelain -- floors.json)" ]; then
             echo "No floor changes."
             exit 0
           fi
