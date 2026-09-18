@@ -63,6 +63,7 @@ let c={...D,...JSON.parse(localStorage.getItem('nsCfg')||'{}')},timer,raw={};
 const n=v=>{if(typeof v==='number')return v;if(typeof v!=='string')return NaN;const m=v.replace(/,/g,'').match(/-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/i);return m?+m[0]:NaN};
 const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
 const walk=(o,fn)=>{if(!o||typeof o!=='object')return;fn(o);Object.values(o).forEach(v=>{if(v&&typeof v==='object')walk(v,fn)})};
+const walkp=(o,fn,path=[])=>{if(!o||typeof o!=='object')return;fn(o,path);if(Array.isArray(o))o.forEach((v,i)=>{if(v&&typeof v==='object')walkp(v,fn,path.concat(String(i)))});else Object.entries(o).forEach(([k,v])=>{if(v&&typeof v==='object')walkp(v,fn,path.concat(k))})};
 const txt=o=>Object.entries(o||{}).filter(([,v])=>typeof v!=='object').map(([k,v])=>k+':'+v).join(' ').toLowerCase();
 const fmt=v=>Number.isFinite(v)?v.toFixed(4)+' Ξ':'—';
 const pct=v=>Number.isFinite(v)?(v*100).toFixed(1)+'%':'—';
@@ -79,12 +80,27 @@ async function mcp(name){
  const j=await r.json();if(j.error)throw Error(j.error.message||name+' error');return {raw:j,data:payload(j)};
 }
 function factionObj(root,f){
- let best=null,score=-1;walk(root,o=>{let t=txt(o),s=0;f.a.forEach(a=>{if(t.includes(a))s+=5});let ks=Object.keys(o).map(norm).join(' ');if(/price|token|floor|market|tax|liquid/.test(ks))s+=3;if(Object.keys(o).length<30)s+=2;if(s>score){score=s;best=o}});return score>=5?best:root;
+ let best=null,score=-1;
+ walkp(root,(o,path)=>{
+   const p=path.map(norm).join(' '), t=(p+' '+txt(o)).toLowerCase(); let sc=0;
+   f.a.forEach(a=>{if(t.includes(a))sc+=7});
+   const ks=Object.keys(o).map(norm).join(' ');
+   if(/price|token|pool|market|tax|liquid|mcap|weth/.test(ks))sc+=4;
+   if(Object.keys(o).length<35)sc+=2;
+   if(sc>score){score=sc;best=o}
+ });
+ return score>=7?best:root;
 }
-function vals(root){let a=[];walk(root,o=>Object.entries(o).forEach(([k,v])=>{if(typeof v!=='object')a.push({k:norm(k),v})}));return a}
+function vals(root){
+ let a=[];
+ walkp(root,(o,path)=>Object.entries(o).forEach(([k,v])=>{
+   if(typeof v!=='object')a.push({k:norm(k),path:path.map(norm).join(' '),v})
+ }));
+ return a
+}
 function pick(root,res){
  const a=vals(root);let b=null,bs=-1;
- for(const x of a){let s=0;res.forEach((r,i)=>{if(r.test(x.k))s+=10-i});if(s>bs){bs=s;b=x}}
+ for(const x of a){const target=x.path+' '+x.k;let sc=0;res.forEach((r,i)=>{if(r.test(target))sc+=10-i});if(sc>bs){bs=sc;b=x}}
  return bs>0?b:null;
 }
 function parseState(root,f){
@@ -96,8 +112,20 @@ function parseState(root,f){
  return {priceEth:pe?n(pe.v):NaN,priceUsd:pu?n(pu.v):NaN,price:pg?n(pg.v):NaN,tax:tax?n(tax.v):NaN};
 }
 function parseFloor(root,f){
- let list=[];walk(root,o=>{const t=txt(o);if(!f.a.some(a=>t.includes(a)))return;for(const [k,v] of Object.entries(o)){if(typeof v==='object')continue;const nk=norm(k);if(nk.includes('floor'))list.push({v:n(v),k:nk,score:(nk.includes('eth')||nk.includes('weth')?20:10)+(Object.keys(o).length<30?2:0)})}});
- list=list.filter(x=>Number.isFinite(x.v)).sort((a,b)=>b.score-a.score);return list[0]?.v??NaN;
+ let list=[];
+ walkp(root,(o,path)=>{
+   const context=(path.join(' ')+' '+txt(o)).toLowerCase();
+   if(!f.a.some(a=>context.includes(a)))return;
+   for(const [k,v] of Object.entries(o)){
+     const nk=norm(k);
+     if(typeof v!=='object' && nk.includes('floor')) list.push({v:n(v),k:nk,score:(nk.includes('eth')||nk.includes('weth')?20:10)+(Object.keys(o).length<30?2:0)});
+     if(v&&typeof v==='object'&&nk.includes('floor')){
+       for(const [kk,vv] of Object.entries(v)) if(typeof vv!=='object') list.push({v:n(vv),k:norm(kk),score:(/eth|weth|native/.test(norm(kk))?24:8)});
+     }
+   }
+ });
+ list=list.filter(x=>Number.isFinite(x.v)&&x.v>0&&x.v<100).sort((a,b)=>b.score-a.score);
+ return list[0]?.v??NaN;
 }
 function quote(st){
  let p=st.priceEth;
@@ -136,7 +164,7 @@ async function refresh(){
    const [ns,nm]=await Promise.all([mcp('nightshades'),mcp('nft_market')]);raw={nightshades:ns.raw,nft_market:nm.raw};
    const rows=F.map(f=>{const st=parseState(ns.data,f),floor=parseFloor(nm.data,f),q=quote(st);return calc(f,floor,q,st)});
    render(rows);dot.className='dot ok';status.textContent='接続OK';detail.textContent='公式MCP自動取得 · Quoteはスポット推定';time.textContent=new Date().toLocaleTimeString('ja-JP');
-   diag.textContent=JSON.stringify(raw,null,2);
+   diag.textContent=JSON.stringify({parsed:rows.map(x=>({faction:x.f.name,floor:x.floor,priceEth:x.st.priceEth,priceUsd:x.st.priceUsd,genericPrice:x.st.price,tax:x.st.tax,buy:x.q.buy,sell:x.q.sell})),raw},null,2);
  }catch(e){dot.className='dot badDot';status.textContent='取得エラー';detail.textContent=e.message;diag.textContent=String(e.stack||e)}
  refBtn.disabled=false;
 }
