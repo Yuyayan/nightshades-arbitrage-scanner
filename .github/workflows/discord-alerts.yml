@@ -106,7 +106,7 @@ jobs:
               raise SystemExit(0)
 
           market = json.loads(MARKET_FILE.read_text())
-          updated = parse_iso(market.get("updatedAt"))
+          updated = parse_iso(market.get("checkedAt") or market.get("updatedAt"))
           age_min = (now_utc() - updated).total_seconds() / 60 if updated else math.inf
           if age_min > max_market_age:
               print(f"market data stale ({age_min:.1f} min); skip")
