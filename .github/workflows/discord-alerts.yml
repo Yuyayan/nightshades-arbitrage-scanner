@@ -2,9 +2,11 @@ name: Nightshades Discord alerts
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Update Nightshades market data"]
-    types: [completed]
+  schedule:
+    - cron: "*/5 * * * *"
+  push:
+    paths:
+      - ".github/workflows/discord-alerts.yml"
 
 permissions:
   contents: write
@@ -15,12 +17,13 @@ concurrency:
 
 jobs:
   alert:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
       MIN_PROFIT_ETH: "0.002"
       MIN_ROI: "0.10"
+      LIST_MIN_PROFIT_ETH: "0.004"
+      LIST_MIN_ROI: "0.12"
       MAX_TAX: "0.02"
       POOL_FEE: "0.01"
       QUOTE_BUFFER: "0.015"
@@ -28,7 +31,6 @@ jobs:
       NFT_TO_TOKEN_QTY: "895000"
       ANVIL_GAS_ETH: "0.00082"
       NFT_GAS_ETH: "0.00020"
-      MAX_MARKET_AGE_MIN: "15"
       REPEAT_AFTER_MIN: "60"
       PROFIT_IMPROVEMENT_ETH: "0.002"
       TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
@@ -38,17 +40,19 @@ jobs:
         with:
           ref: main
 
-      - name: Evaluate arbitrage and notify Discord
+      - name: Evaluate LIVE data and notify Discord
         run: |
           python3 - <<'PY'
-          import json, os, pathlib, urllib.request, datetime, math
+          import json, os, pathlib, urllib.request, datetime, math, time
 
           MCP = "https://laura.stonkbrokers.io/api/mcp"
-          MARKET_FILE = pathlib.Path("floors.json")
+          MARKET_URL = "https://nightshades-arbitrage-monitor-yuyas-projects-e92841bc.vercel.app/api/market"
           STATE_FILE = pathlib.Path(".github/nightshades-alert-state.json")
 
           min_profit = float(os.environ["MIN_PROFIT_ETH"])
           min_roi = float(os.environ["MIN_ROI"])
+          list_min_profit = float(os.environ["LIST_MIN_PROFIT_ETH"])
+          list_min_roi = float(os.environ["LIST_MIN_ROI"])
           max_tax = float(os.environ["MAX_TAX"])
           pool_fee = float(os.environ["POOL_FEE"])
           quote_buffer = float(os.environ["QUOTE_BUFFER"])
@@ -56,7 +60,6 @@ jobs:
           nft_to_token_qty = float(os.environ["NFT_TO_TOKEN_QTY"])
           anvil_gas = float(os.environ["ANVIL_GAS_ETH"])
           nft_gas = float(os.environ["NFT_GAS_ETH"])
-          max_market_age = float(os.environ["MAX_MARKET_AGE_MIN"])
           repeat_after = float(os.environ["REPEAT_AFTER_MIN"]) * 60
           profit_improvement = float(os.environ["PROFIT_IMPROVEMENT_ETH"])
           webhook = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
@@ -73,182 +76,169 @@ jobs:
               return datetime.datetime.now(datetime.timezone.utc)
 
           def parse_iso(s):
-              if not s:
-                  return None
-              return datetime.datetime.fromisoformat(s.replace("Z", "+00:00"))
+              return datetime.datetime.fromisoformat(s.replace("Z","+00:00")) if s else None
+
+          def get_json(url, timeout=20, retries=2):
+              err = None
+              for i in range(retries):
+                  try:
+                      req = urllib.request.Request(url, headers={"user-agent":"Nightshades-Arbitrage-Scanner/1.0","accept":"application/json"})
+                      with urllib.request.urlopen(req, timeout=timeout) as r:
+                          return json.loads(r.read().decode())
+                  except Exception as e:
+                      err = e
+                      if i + 1 < retries:
+                          time.sleep(1)
+              raise err
 
           def post_json(url, obj, timeout=20):
-              body = json.dumps(obj).encode()
-              req = urllib.request.Request(
-                  url, data=body,
-                  headers={
-                      "content-type": "application/json",
-                      "accept": "application/json",
-                      "user-agent": "Nightshades-Arbitrage-Scanner/1.0",
-                  },
-                  method="POST",
-              )
-              with urllib.request.urlopen(req, timeout=timeout) as r:
-                  return r.read().decode("utf-8", "replace")
+              body=json.dumps(obj).encode()
+              req=urllib.request.Request(url,data=body,headers={"content-type":"application/json","accept":"application/json","user-agent":"Nightshades-Arbitrage-Scanner/1.0"},method="POST")
+              with urllib.request.urlopen(req,timeout=timeout) as r:
+                  return r.read().decode("utf-8","replace")
+
+          if not webhook:
+              raise SystemExit("DISCORD_WEBHOOK_URL is empty")
 
           if test_mode:
-              if not webhook:
-                  print("DISCORD_WEBHOOK_URL is not configured; test skipped.")
-                  raise SystemExit(0)
-              post_json(webhook, {
-                  "content": "✅ **Nightshades Discord通知 接続OK**\n監視ワークフローからテスト送信しました。今後、設定条件を満たす即時裁定が出たときだけ通知します。"
-              })
+              post_json(webhook, {"content":"✅ **Nightshades Discord通知 接続OK**\nLIVE監視のテスト送信です。5分ごとにToken + OpenSea LIVEを確認します。"})
               print("Discord test notification sent.")
               raise SystemExit(0)
 
-          if not MARKET_FILE.exists():
-              print("floors.json missing; skip")
+          market = get_json(MARKET_URL + "?t=" + str(int(time.time())))
+          checked = parse_iso(market.get("checkedAt") or market.get("updatedAt"))
+          age_min = (now_utc()-checked).total_seconds()/60 if checked else math.inf
+          if age_min > 5:
+              print(f"OpenSea LIVE stale: {age_min:.1f} min; skip")
+              raise SystemExit(0)
+          if market.get("floorComplete") != 4 or market.get("offerComplete") != 4:
+              print("OpenSea LIVE incomplete; skip", market)
               raise SystemExit(0)
 
-          market = json.loads(MARKET_FILE.read_text())
-          updated = parse_iso(market.get("checkedAt") or market.get("updatedAt"))
-          age_min = (now_utc() - updated).total_seconds() / 60 if updated else math.inf
-          if age_min > max_market_age:
-              print(f"market data stale ({age_min:.1f} min); skip")
-              raise SystemExit(0)
-
-          mcp_req = {
-              "jsonrpc": "2.0",
-              "id": 1,
-              "method": "tools/call",
-              "params": {"name": "nightshades", "arguments": {}},
-          }
-          raw = json.loads(post_json(MCP, mcp_req))
-          result = raw.get("result", {})
-          data = result.get("structuredContent")
+          mcp_req={"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"nightshades","arguments":{}}}
+          raw=post_json(MCP,mcp_req)
+          jr=json.loads(raw)
+          result=jr.get("result",{})
+          data=result.get("structuredContent")
           if not data:
-              txt = next((x.get("text") for x in result.get("content", []) if x.get("text")), None)
-              data = json.loads(txt) if txt else None
-          if not data or not data.get("live", {}).get("factions"):
-              print("Nightshades live data missing; skip")
+              txt=next((x.get("text") for x in result.get("content",[]) if x.get("text")),None)
+              data=json.loads(txt) if txt else None
+          if not data or not data.get("live",{}).get("factions"):
+              print("Token LIVE missing; skip")
               raise SystemExit(0)
 
-          live = data["live"]
-          tax = float(live.get("snipeTaxBps", 0)) / 10000
+          live=data["live"]
+          tax=float(live.get("snipeTaxBps",0))/10000
           if live.get("nightActive") or tax > max_tax:
               print(f"blocked by Night/Tax. night={live.get('nightActive')} tax={tax:.2%}")
               raise SystemExit(0)
 
-          rows = {x["faction"]["id"]: x for x in live["factions"]}
-          opportunities = []
+          rows={x["faction"]["id"]:x for x in live["factions"]}
+          immediate=[]
+          list_candidates=[]
 
-          for fid, meta in factions.items():
-              row = rows.get(fid)
-              floor = market.get("floors", {}).get(fid)
-              offer = market.get("offers", {}).get(fid)
-              creator_bps = market.get("creatorFeeBps", {}).get(fid)
-
-              if not row or not isinstance(floor, (int, float)) or not isinstance(offer, (int, float)):
+          for fid,meta in factions.items():
+              row=rows.get(fid)
+              floor=market.get("floors",{}).get(fid)
+              offer=market.get("offers",{}).get(fid)
+              creator_bps=market.get("creatorFeeBps",{}).get(fid)
+              if not row or not isinstance(floor,(int,float)) or not isinstance(offer,(int,float)):
                   continue
 
-              price = float(row["priceEth"])
-              seller_fee = (float(creator_bps) / 10000) if isinstance(creator_bps, (int, float)) else 0.06
-              overhead = pool_fee + quote_buffer + tax
+              price=float(row["priceEth"])
+              seller_fee=(float(creator_bps)/10000) if isinstance(creator_bps,(int,float)) else 0.06
+              overhead=pool_fee+quote_buffer+tax
+              token_buy=token_to_nft_qty*price*(1+overhead)
+              token_sell=nft_to_token_qty*price*max(0,1-overhead)
 
-              token_buy = token_to_nft_qty * price * (1 + overhead)
-              token_sell = nft_to_token_qty * price * max(0, 1 - overhead)
+              # Immediate A: Token -> NFT -> accept current Collection Offer
+              cost_a=token_buy+anvil_gas
+              ret_a=offer*(1-seller_fee)-nft_gas
+              profit_a=ret_a-cost_a
+              roi_a=profit_a/cost_a if cost_a>0 else -999
 
-              # A) Token -> NFT -> accept current collection offer
-              cost_a = token_buy + anvil_gas
-              ret_a = offer * (1 - seller_fee) - nft_gas
-              profit_a = ret_a - cost_a
-              roi_a = profit_a / cost_a if cost_a > 0 else -999
+              # Immediate B: buy Floor NFT -> Anvil -> sell tokens
+              cost_b=floor+nft_gas+anvil_gas
+              ret_b=token_sell
+              profit_b=ret_b-cost_b
+              roi_b=profit_b/cost_b if cost_b>0 else -999
 
-              # B) Buy floor NFT -> Anvil -> sell faction token
-              cost_b = floor + nft_gas + anvil_gas
-              ret_b = token_sell
-              profit_b = ret_b - cost_b
-              roi_b = profit_b / cost_b if cost_b > 0 else -999
+              # Non-immediate: Token -> NFT -> list around current Floor
+              cost_c=token_buy+anvil_gas
+              ret_c=floor*(1-seller_fee)-nft_gas
+              profit_c=ret_c-cost_c
+              roi_c=profit_c/cost_c if cost_c>0 else -999
 
-              for route, cost, ret, profit, roi in [
-                  ("Token → NFT → Top Offer", cost_a, ret_a, profit_a, roi_a),
-                  ("Floor購入 → Token", cost_b, ret_b, profit_b, roi_b),
+              for route,cost,ret,profit,roi in [
+                  ("Token → NFT → Top Offer",cost_a,ret_a,profit_a,roi_a),
+                  ("Floor購入 → Token",cost_b,ret_b,profit_b,roi_b),
               ]:
-                  if profit >= min_profit and roi >= min_roi:
-                      opportunities.append({
-                          "fid": fid,
-                          "name": meta["name"],
-                          "slug": meta["slug"],
-                          "route": route,
-                          "floor": float(floor),
-                          "offer": float(offer),
-                          "price": price,
-                          "cost": cost,
-                          "ret": ret,
-                          "profit": profit,
-                          "roi": roi,
-                          "tax": tax,
-                      })
+                  if profit>=min_profit and roi>=min_roi:
+                      immediate.append({"fid":fid,"name":meta["name"],"slug":meta["slug"],"route":route,"floor":float(floor),"offer":float(offer),"cost":cost,"ret":ret,"profit":profit,"roi":roi,"tax":tax})
 
-          state = {}
+              if profit_c>=list_min_profit and roi_c>=list_min_roi:
+                  list_candidates.append({"fid":fid,"name":meta["name"],"slug":meta["slug"],"route":"Token → NFT → Floor List","floor":float(floor),"offer":float(offer),"cost":cost_c,"ret":ret_c,"profit":profit_c,"roi":roi_c,"tax":tax})
+
+          opportunities=[]
+          if immediate:
+              best=max(immediate,key=lambda x:x["profit"])
+              best["priority"]="immediate"
+              opportunities.append(best)
+          elif list_candidates:
+              best=max(list_candidates,key=lambda x:x["profit"])
+              best["priority"]="list"
+              opportunities.append(best)
+
+          state={}
           if STATE_FILE.exists():
-              try:
-                  state = json.loads(STATE_FILE.read_text())
-              except Exception:
-                  state = {}
+              try: state=json.loads(STATE_FILE.read_text())
+              except Exception: state={}
 
           if not opportunities:
               if state.get("active"):
-                  STATE_FILE.write_text(json.dumps({"active": None, "clearedAt": now_utc().isoformat()}, indent=2) + "\n")
+                  STATE_FILE.parent.mkdir(parents=True,exist_ok=True)
+                  STATE_FILE.write_text(json.dumps({"active":None,"clearedAt":now_utc().isoformat()},indent=2)+"\n")
                   print("Opportunity cleared.")
               else:
                   print("No qualifying opportunity.")
               raise SystemExit(0)
 
-          best = max(opportunities, key=lambda x: x["profit"])
-          sig = best["fid"] + "|" + best["route"]
-          last_sig = state.get("active")
-          last_profit = float(state.get("lastProfit", -999))
-          last_sent = parse_iso(state.get("lastSentAt"))
-          secs_since = (now_utc() - last_sent).total_seconds() if last_sent else math.inf
-
-          should_send = (
-              sig != last_sig
-              or secs_since >= repeat_after
-              or best["profit"] >= last_profit + profit_improvement
-          )
-
+          best=opportunities[0]
+          sig=best["priority"]+"|"+best["fid"]+"|"+best["route"]
+          last_sig=state.get("active")
+          last_profit=float(state.get("lastProfit",-999))
+          last_sent=parse_iso(state.get("lastSentAt"))
+          secs_since=(now_utc()-last_sent).total_seconds() if last_sent else math.inf
+          should_send=(sig!=last_sig or secs_since>=repeat_after or best["profit"]>=last_profit+profit_improvement)
           if not should_send:
-              print("Same opportunity already notified; suppress duplicate.")
+              print("Duplicate opportunity suppressed.")
               raise SystemExit(0)
 
-          if not webhook:
-              print("DISCORD_WEBHOOK_URL is not configured; skip notification without updating state.")
-              raise SystemExit(0)
+          opensea=f"https://opensea.io/collection/{best['slug']}"
+          token_page="https://stonkbrokers.io/safe-launch/nightshades"
+          anvil_page="https://nightshades.meebco.com/anvil"
+          if best["priority"]=="immediate":
+              heading="🚨 **Nightshades 即時裁定チャンス**"
+              note="実行前に実Quoteを確認。"
+          else:
+              heading="🟡 **Nightshades Floor List候補**"
+              note="即時裁定ではありません。Floorで売れるまでの価格変動・未約定リスクあり。"
 
-          opensea = f"https://opensea.io/collection/{best['slug']}"
-          token_page = "https://stonkbrokers.io/safe-launch/nightshades"
-          game_page = "https://nightshades.meebco.com"
-
-          content = (
-              "🚨 **Nightshades 即時裁定チャンス**\n"
+          content=(
+              heading+"\n"
               f"**{best['name']} — {best['route']}**\n"
-              f"利益: **+{best['profit']:.4f} ETH**  /  ROI: **+{best['roi']*100:.1f}%**\n"
-              f"投入: {best['cost']:.4f} ETH  →  回収: {best['ret']:.4f} ETH\n"
-              f"Floor: {best['floor']:.4f} ETH  /  Top Offer: {best['offer']:.4f} ETH\n"
-              f"Sunrise Tax: {best['tax']*100:.1f}%  /  OpenSeaデータ: {age_min:.1f}分前\n"
-              f"OpenSea: {opensea}\n"
-              f"Token: {token_page}\n"
-              f"Nightshades: {game_page}\n"
-              "※ Token側はスポット価格ベースの推定。実行直前に実Quoteを確認。"
+              f"利益: **+{best['profit']:.4f} ETH** / ROI: **+{best['roi']*100:.1f}%**\n"
+              f"投入: {best['cost']:.4f} ETH → 回収想定: {best['ret']:.4f} ETH\n"
+              f"Floor: {best['floor']:.4f} / Top Offer: {best['offer']:.4f} ETH\n"
+              f"Tax: {best['tax']*100:.1f}% / OpenSea LIVE: {age_min:.1f}分前\n"
+              f"OpenSea: {opensea}\nAnvil: {anvil_page}\nToken: {token_page}\n"
+              f"※ {note}"
           )
+          post_json(webhook,{"content":content})
 
-          post_json(webhook, {"content": content})
-          STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
-          STATE_FILE.write_text(json.dumps({
-              "active": sig,
-              "lastSentAt": now_utc().isoformat(),
-              "lastProfit": best["profit"],
-              "lastRoi": best["roi"],
-              "faction": best["fid"],
-              "route": best["route"],
-          }, indent=2) + "\n")
-          print("Discord notification sent.")
+          STATE_FILE.parent.mkdir(parents=True,exist_ok=True)
+          STATE_FILE.write_text(json.dumps({"active":sig,"lastSentAt":now_utc().isoformat(),"lastProfit":best["profit"],"lastRoi":best["roi"],"faction":best["fid"],"route":best["route"],"priority":best["priority"]},indent=2)+"\n")
+          print("Discord notification sent:",sig)
           PY
 
       - name: Persist alert state
@@ -261,4 +251,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .github/nightshades-alert-state.json
           git commit -m "Update Nightshades alert state"
+          git pull --rebase origin main
           git push
