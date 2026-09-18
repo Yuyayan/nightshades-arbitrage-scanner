@@ -134,9 +134,19 @@ async function fetchNightshades(){
  }finally{clearTimeout(timeout)}
 }
 async function fetchMarket(){
- const res=await fetch("./floors.json?t="+Date.now(),{cache:"no-store"});
- if(!res.ok)throw new Error("market HTTP "+res.status);
- return await res.json();
+ const urls=[
+  "https://raw.githubusercontent.com/Yuyayan/nightshades-arbitrage-scanner/main/floors.json?t="+Date.now(),
+  "./floors.json?t="+Date.now()
+ ];
+ let lastError=null;
+ for(const url of urls){
+  try{
+   const res=await fetch(url,{cache:"no-store"});
+   if(!res.ok)throw new Error("market HTTP "+res.status);
+   return await res.json();
+  }catch(e){lastError=e}
+ }
+ throw lastError||new Error("market data unavailable");
 }
 function quoteFromSpot(price,taxFraction){
  const overhead=cfg.poolFee/100+cfg.quoteBuffer/100+taxFraction;
