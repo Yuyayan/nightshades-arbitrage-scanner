@@ -1,4 +1,4 @@
-name: Update Nightshades floors
+name: Update Nightshades market data
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: nightshades-floor-update
+  group: nightshades-market-update
   cancel-in-progress: true
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch OpenSea floors
+      - name: Fetch OpenSea floors and collection offers
         run: |
           python3 - <<'PY'
           import json, re, urllib.request, datetime, pathlib, time
@@ -40,45 +40,8 @@ jobs:
 
           def get(url):
               req = urllib.request.Request(url, headers=headers)
-              with urllib.request.urlopen(req, timeout=20) as r:
+              with urllib.request.urlopen(req, timeout=25) as r:
                   return r.read().decode("utf-8", "replace")
-
-          floors = {}
-          errors = {}
-          for faction, slug in slugs.items():
-              floor = None
-
-              # Prefer the public stats endpoint when its cache permits anonymous reads.
-              try:
-                  body = get(f"https://api.opensea.io/api/v2/collections/{slug}/stats")
-                  obj = json.loads(body)
-                  v = obj.get("total", {}).get("floor_price")
-                  if isinstance(v, (int, float)) and v > 0:
-                      floor = float(v)
-              except Exception as e:
-                  errors[faction + "_api"] = str(e)[:180]
-
-              # Reliable fallback: the current floor is embedded in OpenSea's collection title.
-              if floor is None:
-                  try:
-                      html = get(f"https://opensea.io/collection/{slug}")
-                      patterns = [
-                          r"<title>Nightshades[^<]*?([0-9]+(?:\.[0-9]+)?)\s*ETH\s*-\s*Collection",
-                          r'"floorPrice"\s*:\s*\{[^{}]*?"unit"\s*:\s*([0-9]+(?:\.[0-9]+)?)',
-                          r'"floor_price"\s*:\s*([0-9]+(?:\.[0-9]+)?)',
-                      ]
-                      for pat in patterns:
-                          m = re.search(pat, html, re.I | re.S)
-                          if m:
-                              floor = float(m.group(1))
-                              break
-                      if floor is None:
-                          errors[faction + "_html"] = "floor not found"
-                  except Exception as e:
-                      errors[faction + "_html"] = str(e)[:180]
-
-              floors[faction] = floor
-              time.sleep(0.6)
 
           path = pathlib.Path("floors.json")
           old = {}
@@ -89,43 +52,109 @@ jobs:
                   pass
 
           old_floors = old.get("floors", {})
-          complete = sum(v is not None for v in floors.values())
+          old_offers = old.get("offers", {})
+          old_fees = old.get("creatorFeeBps", {})
 
-          # Do not replace a previously good value with null because of a transient OpenSea error.
-          for k, v in list(floors.items()):
-              if v is None and isinstance(old_floors.get(k), (int, float)):
-                  floors[k] = old_floors[k]
+          floors, offers, creator_fees, errors = {}, {}, {}, {}
 
-          changed = floors != old_floors
+          for faction, slug in slugs.items():
+              floor = None
+              offer = None
+              creator_fee = None
+              html = None
+
+              # Public stats endpoint is useful when anonymous cache access is available.
+              try:
+                  body = get(f"https://api.opensea.io/api/v2/collections/{slug}/stats")
+                  obj = json.loads(body)
+                  v = obj.get("total", {}).get("floor_price")
+                  if isinstance(v, (int, float)) and v > 0:
+                      floor = float(v)
+              except Exception as e:
+                  errors[faction + "_stats"] = str(e)[:160]
+
+              # Collection HTML contains SSR collection data including floor/topOffer/creator fee.
+              try:
+                  html = get(f"https://opensea.io/collection/{slug}")
+
+                  if floor is None:
+                      floor_patterns = [
+                          r"<title>Nightshades[^<]*?([0-9]+(?:\.[0-9]+)?)\s*ETH\s*-\s*Collection",
+                          r'"floorPrice"\s*:\s*\{.*?"unit"\s*:\s*([0-9]+(?:\.[0-9]+)?)',
+                          r'"floor_price"\s*:\s*([0-9]+(?:\.[0-9]+)?)',
+                      ]
+                      for pat in floor_patterns:
+                          m = re.search(pat, html, re.I | re.S)
+                          if m:
+                              floor = float(m.group(1))
+                              break
+
+                  # The collection-level topOffer in OpenSea SSR data is the current collection offer.
+                  offer_patterns = [
+                      r'"topOffer"\s*:\s*\{\s*"pricePerItem"\s*:\s*\{.*?"token"\s*:\s*\{\s*"unit"\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*,\s*"symbol"\s*:\s*"WETH"',
+                      r'"topOffer"\s*:\s*\{.*?"native"\s*:\s*\{\s*"unit"\s*:\s*([0-9]+(?:\.[0-9]+)?)',
+                  ]
+                  for pat in offer_patterns:
+                      m = re.search(pat, html, re.I | re.S)
+                      if m:
+                          offer = float(m.group(1))
+                          break
+
+                  m = re.search(r'"totalCreatorFee"\s*:\s*\{\s*"feeBasisPoints"\s*:\s*(\d+)', html, re.I)
+                  if m:
+                      creator_fee = int(m.group(1))
+              except Exception as e:
+                  errors[faction + "_html"] = str(e)[:160]
+
+              # Preserve last good values during transient OpenSea failures.
+              if floor is None and isinstance(old_floors.get(faction), (int, float)):
+                  floor = old_floors[faction]
+              if offer is None and isinstance(old_offers.get(faction), (int, float)):
+                  offer = old_offers[faction]
+              if creator_fee is None and isinstance(old_fees.get(faction), (int, float)):
+                  creator_fee = old_fees[faction]
+
+              floors[faction] = floor
+              offers[faction] = offer
+              creator_fees[faction] = creator_fee
+              time.sleep(0.8)
+
+          market_changed = (
+              floors != old_floors or
+              offers != old_offers or
+              creator_fees != old_fees
+          )
+
           data = {
-              "source": "OpenSea",
+              "source": "OpenSea public collection data",
               "floors": floors,
+              "offers": offers,
+              "creatorFeeBps": creator_fees,
               "updatedAt": (
                   datetime.datetime.now(datetime.timezone.utc).isoformat()
-                  if changed or not old.get("updatedAt")
+                  if market_changed or not old.get("updatedAt")
                   else old["updatedAt"]
               ),
-              "collector": "GitHub Actions / OpenSea public collection data",
-              "complete": sum(v is not None for v in floors.values()),
+              "floorComplete": sum(isinstance(v, (int, float)) for v in floors.values()),
+              "offerComplete": sum(isinstance(v, (int, float)) for v in offers.values()),
               "errors": errors,
           }
 
-          # Only rewrite when the floor set changed, to avoid pointless commits.
-          if changed or not path.exists():
+          if market_changed or not path.exists():
               path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
-              print("floors changed:", floors)
+              print("market changed:", data)
           else:
-              print("no floor changes:", floors)
+              print("no market changes:", data)
           PY
 
-      - name: Commit changed floors
+      - name: Commit changed market data
         run: |
           if [ -z "$(git status --porcelain -- floors.json)" ]; then
-            echo "No floor changes."
+            echo "No market changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add floors.json
-          git commit -m "Update Nightshades OpenSea floors"
+          git commit -m "Update Nightshades OpenSea market data"
           git push
