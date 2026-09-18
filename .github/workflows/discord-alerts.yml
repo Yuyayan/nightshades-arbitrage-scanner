@@ -31,6 +31,7 @@ jobs:
       MAX_MARKET_AGE_MIN: "15"
       REPEAT_AFTER_MIN: "60"
       PROFIT_IMPROVEMENT_ETH: "0.002"
+      TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -59,6 +60,7 @@ jobs:
           repeat_after = float(os.environ["REPEAT_AFTER_MIN"]) * 60
           profit_improvement = float(os.environ["PROFIT_IMPROVEMENT_ETH"])
           webhook = os.environ.get("DISCORD_WEBHOOK_URL", "").strip()
+          test_mode = os.environ.get("TEST_MODE", "false").lower() == "true"
 
           factions = {
               "ghosts": {"name": "Ghosts", "slug": "nightshades-ghosts"},
@@ -88,6 +90,16 @@ jobs:
               )
               with urllib.request.urlopen(req, timeout=timeout) as r:
                   return r.read().decode("utf-8", "replace")
+
+          if test_mode:
+              if not webhook:
+                  print("DISCORD_WEBHOOK_URL is not configured; test skipped.")
+                  raise SystemExit(0)
+              post_json(webhook, {
+                  "content": "✅ **Nightshades Discord通知 接続OK**\n監視ワークフローからテスト送信しました。今後、設定条件を満たす即時裁定が出たときだけ通知します。"
+              })
+              print("Discord test notification sent.")
+              raise SystemExit(0)
 
           if not MARKET_FILE.exists():
               print("floors.json missing; skip")
