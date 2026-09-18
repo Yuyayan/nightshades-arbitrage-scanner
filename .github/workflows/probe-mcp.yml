@@ -1,4 +1,4 @@
-name: Probe OpenSea Page CORS
+name: Probe Nightshades Resource
 on:
   push:
     paths:
@@ -12,14 +12,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Probe
         run: |
-          {
-            echo "=== HTML headers ==="
-            curl -i -sS --max-time 20 -H 'Origin: https://yuyayan.github.io' 'https://opensea.io/collection/nightshades-ghosts' | head -50
-          } > probe-page-cors.txt
+          curl -sS --max-time 30 'https://laura.stonkbrokers.io/api/mcp' \
+            -H 'content-type: application/json' \
+            -d '{"jsonrpc":"2.0","id":9,"method":"resources/read","params":{"uri":"laura://nightshades"}}' > probe-resource.txt
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add probe-page-cors.txt
-          git commit -m "Probe OpenSea collection page CORS" || exit 0
+          git add probe-resource.txt
+          git commit -m "Probe Nightshades resource" || exit 0
           git push
