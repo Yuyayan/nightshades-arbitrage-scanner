@@ -75,9 +75,56 @@ function payload(j){
  return r||j;
 }
 async function mcp(name){
- const r=await fetch(MCP,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:Date.now(),method:'tools/call',params:{name,arguments:{}}})});
- if(!r.ok)throw Error(name+' HTTP '+r.status);
- const j=await r.json();if(j.error)throw Error(j.error.message||name+' error');return {raw:j,data:payload(j)};
+ const id=Date.now()+Math.floor(Math.random()*1000);
+ const ac=new AbortController();
+ const to=setTimeout(()=>ac.abort('timeout'),12000);
+ try{
+   const r=await fetch(MCP,{
+     method:'POST',
+     headers:{'content-type':'application/json','accept':'application/json, text/event-stream'},
+     body:JSON.stringify({jsonrpc:'2.0',id,method:'tools/call',params:{name,arguments:{}}}),
+     signal:ac.signal
+   });
+   if(!r.ok)throw Error(name+' HTTP '+r.status);
+   const ct=(r.headers.get('content-type')||'').toLowerCase();
+
+   // MCP Streamable HTTP may answer as SSE. Safari waits forever if we call r.json()
+   // on an open event stream, so read the first complete JSON-RPC event and cancel.
+   if(ct.includes('text/event-stream')){
+     const reader=r.body.getReader();
+     const dec=new TextDecoder();
+     let buf='';
+     while(true){
+       const {value,done}=await reader.read();
+       if(done)break;
+       buf+=dec.decode(value,{stream:true});
+       const blocks=buf.split(/\n\n|\r\n\r\n/);
+       buf=blocks.pop()||'';
+       for(const block of blocks){
+         for(const line of block.split(/\r?\n/)){
+           if(!line.startsWith('data:'))continue;
+           const raw=line.slice(5).trim();
+           if(!raw||raw==='[DONE]')continue;
+           let j;
+           try{j=JSON.parse(raw)}catch(e){continue}
+           if(j && (j.id===id || j.result || j.error)){
+             try{await reader.cancel()}catch(e){}
+             if(j.error)throw Error(j.error.message||name+' error');
+             return {raw:j,data:payload(j)};
+           }
+         }
+       }
+     }
+     throw Error(name+' SSE response ended without data');
+   }
+
+   const j=await r.json();
+   if(j.error)throw Error(j.error.message||name+' error');
+   return {raw:j,data:payload(j)};
+ }catch(e){
+   if(e?.name==='AbortError' || String(e).includes('timeout')) throw Error(name+' timeout / Safari接続失敗');
+   throw e;
+ }finally{clearTimeout(to)}
 }
 function factionObj(root,f){
  let best=null,score=-1;
