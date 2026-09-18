@@ -1,0 +1,131 @@
+name: Update Nightshades floors
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+  push:
+    paths:
+      - ".github/workflows/update-floors.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightshades-floor-update
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch OpenSea floors
+        run: |
+          python3 - <<'PY'
+          import json, re, urllib.request, datetime, pathlib, time
+
+          slugs = {
+              "ghosts": "nightshades-ghosts",
+              "watchers": "nightshades-watchers",
+              "knights": "nightshades-knights",
+              "zombies": "nightshades-zombies",
+          }
+
+          headers = {
+              "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140 Safari/537.36",
+              "Accept-Language": "en-US,en;q=0.9",
+          }
+
+          def get(url):
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req, timeout=20) as r:
+                  return r.read().decode("utf-8", "replace")
+
+          floors = {}
+          errors = {}
+          for faction, slug in slugs.items():
+              floor = None
+
+              # Prefer the public stats endpoint when its cache permits anonymous reads.
+              try:
+                  body = get(f"https://api.opensea.io/api/v2/collections/{slug}/stats")
+                  obj = json.loads(body)
+                  v = obj.get("total", {}).get("floor_price")
+                  if isinstance(v, (int, float)) and v > 0:
+                      floor = float(v)
+              except Exception as e:
+                  errors[faction + "_api"] = str(e)[:180]
+
+              # Reliable fallback: the current floor is embedded in OpenSea's collection title.
+              if floor is None:
+                  try:
+                      html = get(f"https://opensea.io/collection/{slug}")
+                      patterns = [
+                          r"<title>Nightshades[^<]*?([0-9]+(?:\.[0-9]+)?)\s*ETH\s*-\s*Collection",
+                          r'"floorPrice"\s*:\s*\{[^{}]*?"unit"\s*:\s*([0-9]+(?:\.[0-9]+)?)',
+                          r'"floor_price"\s*:\s*([0-9]+(?:\.[0-9]+)?)',
+                      ]
+                      for pat in patterns:
+                          m = re.search(pat, html, re.I | re.S)
+                          if m:
+                              floor = float(m.group(1))
+                              break
+                      if floor is None:
+                          errors[faction + "_html"] = "floor not found"
+                  except Exception as e:
+                      errors[faction + "_html"] = str(e)[:180]
+
+              floors[faction] = floor
+              time.sleep(0.6)
+
+          path = pathlib.Path("floors.json")
+          old = {}
+          if path.exists():
+              try:
+                  old = json.loads(path.read_text())
+              except Exception:
+                  pass
+
+          old_floors = old.get("floors", {})
+          complete = sum(v is not None for v in floors.values())
+
+          # Do not replace a previously good value with null because of a transient OpenSea error.
+          for k, v in list(floors.items()):
+              if v is None and isinstance(old_floors.get(k), (int, float)):
+                  floors[k] = old_floors[k]
+
+          changed = floors != old_floors
+          data = {
+              "source": "OpenSea",
+              "floors": floors,
+              "updatedAt": (
+                  datetime.datetime.now(datetime.timezone.utc).isoformat()
+                  if changed or not old.get("updatedAt")
+                  else old["updatedAt"]
+              ),
+              "collector": "GitHub Actions / OpenSea public collection data",
+              "complete": sum(v is not None for v in floors.values()),
+              "errors": errors,
+          }
+
+          # Only rewrite when the floor set changed, to avoid pointless commits.
+          if changed or not path.exists():
+              path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+              print("floors changed:", floors)
+          else:
+              print("no floor changes:", floors)
+          PY
+
+      - name: Commit changed floors
+        run: |
+          if git diff --quiet -- floors.json && [ -f floors.json ]; then
+            echo "No floor changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add floors.json
+          git commit -m "Update Nightshades OpenSea floors"
+          git push
