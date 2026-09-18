@@ -1,4 +1,4 @@
-name: Probe CORS
+name: Probe OpenSea Page CORS
 on:
   push:
     paths:
@@ -10,21 +10,16 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Probe CORS
+      - name: Probe
         run: |
-          set +e
           {
-            echo "=== OpenSea ==="
-            curl -i -sS --max-time 20 -H 'Origin: https://yuyayan.github.io' 'https://api.opensea.io/api/v2/collections/nightshades-ghosts/stats' | head -60
-            echo "=== MCP ==="
-            curl -i -sS --max-time 20 -H 'Origin: https://yuyayan.github.io' -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
-              -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"nightshades","arguments":{}}}' \
-              'https://laura.stonkbrokers.io/api/mcp' | head -60
-          } > probe-cors.txt
-      - name: Commit probe
+            echo "=== HTML headers ==="
+            curl -i -sS --max-time 20 -H 'Origin: https://yuyayan.github.io' 'https://opensea.io/collection/nightshades-ghosts' | head -50
+          } > probe-page-cors.txt
+      - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add probe-cors.txt
-          git commit -m "Probe CORS headers" || exit 0
+          git add probe-page-cors.txt
+          git commit -m "Probe OpenSea collection page CORS" || exit 0
           git push
