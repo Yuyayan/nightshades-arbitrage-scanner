@@ -3,221 +3,257 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
 <title>Nightshades Arbitrage Scanner</title>
 <style>
-:root{--b:#0b0d12;--p:#121620;--p2:#181e2a;--l:#273043;--t:#f3f6fa;--m:#93a0b4;--g:#3bd17f;--r:#ff6676;--y:#f5c95d}
-*{box-sizing:border-box}body{margin:0;background:var(--b);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-main{max-width:980px;margin:auto;padding:18px 12px 50px}h1{font-size:21px;margin:0 0 4px}.sub,.small{color:var(--m);font-size:11px}
-.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.btns{display:flex;gap:7px}
-button{background:#171c27;color:var(--t);border:1px solid var(--l);padding:9px 11px;border-radius:10px;font-weight:750}
-button.primary{background:#edf2f8;color:#090b0f}.bar,.best,.card{background:var(--p);border:1px solid var(--l);border-radius:15px}
-.bar{margin:12px 0;padding:10px 12px;display:flex;gap:8px;align-items:center;font-size:12px}.dot{width:8px;height:8px;border-radius:50%;background:var(--y)}.ok{background:var(--g)}.badDot{background:var(--r)}.grow{flex:1}
-.best{padding:14px;margin-bottom:12px}.best h2{font-size:11px;color:var(--m);margin:0 0 6px;text-transform:uppercase;letter-spacing:.08em}.bestName{font-size:20px;font-weight:900}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.k{background:var(--p2);border:1px solid var(--l);padding:9px;border-radius:10px}.k span{display:block;color:var(--m);font-size:9px}.k b{font-size:15px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{overflow:hidden}.head{padding:12px 13px;border-bottom:1px solid var(--l);display:flex;justify-content:space-between;align-items:center}.f{font-size:17px;font-weight:900}.sym{font-size:10px;color:var(--m);margin-left:6px}
-.body{padding:11px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.s,.route{background:var(--p2);border:1px solid var(--l);border-radius:10px;padding:8px}.s span,.route span{font-size:9px;color:var(--m)}.s b{display:block;margin-top:3px;font-size:13px}
-.routes{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}.route{background:#10141d}.route.go{border-color:#2f8d5a}.rtitle{font-size:10px;font-weight:850;margin-bottom:5px}.line{display:flex;justify-content:space-between;font-size:10px;padding:2px 0;color:var(--m)}.line b{color:var(--t)}.roi{font-size:18px;font-weight:900;margin-top:5px}.green{color:var(--g)}.red{color:var(--r)}.yellow{color:var(--y)}
-.pill{font-size:9px;border:1px solid var(--l);border-radius:99px;padding:4px 6px;color:var(--m)}
-footer{font-size:10px;color:var(--m);line-height:1.5;margin-top:12px}
-dialog{width:min(680px,94vw);border:1px solid var(--l);border-radius:15px;background:#111620;color:var(--t);padding:16px}.form{display:grid;grid-template-columns:1fr 1fr;gap:8px}label{font-size:10px;color:var(--m)}input{width:100%;margin-top:4px;background:#0b0f16;color:var(--t);border:1px solid var(--l);padding:9px;border-radius:8px}
-pre{white-space:pre-wrap;word-break:break-word;max-height:230px;overflow:auto;font-size:9px;color:#abb5c5}
-@media(max-width:700px){.grid{grid-template-columns:1fr}.routes{grid-template-columns:1fr 1fr}.kpis{grid-template-columns:1fr 1fr}}
-@media(max-width:430px){.routes{grid-template-columns:1fr}}
+:root{--bg:#0b0d12;--panel:#121722;--panel2:#181e2a;--line:#2a3447;--text:#f5f7fb;--muted:#94a0b4;--green:#39d27d;--red:#ff6575;--yellow:#f4c65c;--blue:#78a9ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:980px;margin:auto;padding:18px 12px 60px}.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+h1{font-size:22px;margin:0 0 5px;letter-spacing:-.02em}.sub,.small{font-size:11px;color:var(--muted)}
+.buttons{display:flex;gap:7px}button{border:1px solid var(--line);background:#171d28;color:var(--text);border-radius:10px;padding:9px 11px;font-weight:800}button.primary{background:#eef2f7;color:#090b0f}
+.status,.best,.card{background:var(--panel);border:1px solid var(--line);border-radius:16px}.status{margin:12px 0;padding:10px 12px;display:flex;gap:8px;align-items:center;font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--yellow)}.dot.ok{background:var(--green)}.dot.bad{background:var(--red)}.grow{flex:1}
+.best{padding:14px;margin-bottom:12px}.eyebrow{font-size:10px;color:var(--muted);font-weight:900;letter-spacing:.09em}.bestName{font-size:20px;font-weight:900;margin-top:6px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:9px}.kpi span{display:block;color:var(--muted);font-size:9px;margin-bottom:4px}.kpi b{font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{overflow:hidden}.head{padding:12px 13px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.faction{font-size:18px;font-weight:900}.sym{font-size:10px;color:var(--muted);margin-left:6px}
+.body{padding:11px}.meta{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}.pill{font-size:9px;border:1px solid var(--line);border-radius:999px;padding:4px 6px;color:var(--muted)}.pill.dmg{color:var(--red)}.pill.win{color:var(--green)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.stat,.route{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:8px}.stat span{display:block;color:var(--muted);font-size:9px}.stat b{display:block;font-size:13px;margin-top:3px;white-space:nowrap}
+.routes{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}.route{background:#0f141d}.route.go{border-color:#2d8e59;box-shadow:inset 0 0 0 1px rgba(57,210,125,.05)}.route.wait{border-color:#8a7030}
+.rtitle{font-size:10px;font-weight:900;margin-bottom:6px}.line{display:flex;justify-content:space-between;gap:7px;font-size:10px;color:var(--muted);padding:2px 0}.line b{color:var(--text)}.roi{font-size:18px;font-weight:900;margin-top:6px}.green{color:var(--green)!important}.red{color:var(--red)!important}.yellow{color:var(--yellow)!important}
+.notice{font-size:10px;color:var(--muted);line-height:1.5;margin-top:8px}footer{font-size:10px;color:var(--muted);line-height:1.5;margin-top:14px}
+dialog{width:min(700px,94vw);border:1px solid var(--line);border-radius:16px;background:#111620;color:var(--text);padding:16px}.form{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}label{font-size:10px;color:var(--muted)}input{width:100%;margin-top:4px;background:#0b0f16;color:var(--text);border:1px solid var(--line);padding:9px;border-radius:8px}
+details{margin-top:12px}pre{white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto;font-size:9px;color:#abb5c5}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}@media(max-width:430px){.routes{grid-template-columns:1fr}.top h1{font-size:20px}}
 </style>
 </head>
 <body><main>
-<div class="top"><div><h1>Nightshades Arbitrage Scanner</h1><div class="sub">4陣営 × Token→NFT / NFT→Token を自動比較</div></div><div class="btns"><button id="setBtn">設定</button><button class="primary" id="refBtn">更新</button></div></div>
-<div class="bar"><i class="dot" id="dot"></i><b id="status">接続中</b><span id="detail" class="small"></span><span class="grow"></span><span id="time" class="small">—</span></div>
-<section class="best"><h2>Best opportunity</h2><div class="bestName" id="best">判定待ち</div><div class="kpis">
-<div class="k"><span>想定利益</span><b id="bp">—</b></div><div class="k"><span>ROI</span><b id="br">—</b></div><div class="k"><span>投入</span><b id="bc">—</b></div><div class="k"><span>回収</span><b id="bv">—</b></div>
-</div></section>
-<div id="cards" class="grid"></div>
-<footer>初期値: Token→NFT = 1,105,000 token / NFT→Token = 895,000 token。Floorで実際に売買できること、価格が動かないことを前提にした概算です。表示が ESTIMATE の場合はスポット価格ベースなので、最終発注前に実Quoteを確認してください。</footer>
+<div class="top">
+ <div><h1>Nightshades Arbitrage Scanner</h1><div class="sub">4陣営 × Token→NFT / NFT→Token を自動比較</div></div>
+ <div class="buttons"><button id="settingsBtn">設定</button><button class="primary" id="refreshBtn">更新</button></div>
+</div>
+<div class="status"><span class="dot" id="dot"></span><b id="statusText">取得中</b><span class="small" id="statusDetail"></span><span class="grow"></span><span class="small" id="updated">—</span></div>
+<section class="best">
+ <div class="eyebrow">BEST OPPORTUNITY</div><div class="bestName" id="bestName">判定待ち</div>
+ <div class="kpis">
+  <div class="kpi"><span>想定利益</span><b id="bestProfit">—</b></div>
+  <div class="kpi"><span>ROI</span><b id="bestRoi">—</b></div>
+  <div class="kpi"><span>投入</span><b id="bestCost">—</b></div>
+  <div class="kpi"><span>回収</span><b id="bestReturn">—</b></div>
+ </div>
+ <div class="notice" id="bestNote"></div>
+</section>
+<div class="grid" id="cards"></div>
+<footer>
+ Token価格・Sunrise TaxはStonkBrokersのNightshadesライブデータ、NFT FloorはOpenSea公開ページを5分間隔で収集。
+ Token売買額はスポット価格から1%プールFee・Sunrise Tax・設定バッファを控除/加算した保守的な推定です。実際の約定額は発注直前に確認してください。
+</footer>
 </main>
 
-<dialog id="dlg"><div style="display:flex;justify-content:space-between;align-items:center"><b>設定</b><button id="closeBtn">閉じる</button></div>
-<div class="form" style="margin-top:12px">
-<label>OpenSea売却控除率 %<input id="sellerFee" type="number" step=".1"></label>
-<label>買い候補の最低ROI %<input id="minRoi" type="number" step="1"></label>
-<label>Token→NFT 必要Token<input id="tokenToNftQty" type="number" step="1000"></label>
-<label>NFT→Token 受取Token<input id="nftToTokenQty" type="number" step="1000"></label>
-<label>Anvil+Gas想定 ETH<input id="anvilGas" type="number" step=".00001"></label>
-<label>売買予備Gas ETH<input id="nftGas" type="number" step=".00001"></label>
-<label>推定Quoteバッファ %<input id="quoteBuffer" type="number" step=".5"></label>
-<label>自動更新 秒<input id="refreshSec" type="number" step="5"></label>
-</div>
-<details style="margin-top:12px"><summary>診断データ</summary><pre id="diag"></pre></details>
+<dialog id="settingsDialog">
+ <div style="display:flex;justify-content:space-between;align-items:center"><b>判定設定</b><button id="closeSettings">閉じる</button></div>
+ <div class="form">
+  <label>OpenSea売却控除率 %<input id="sellerFee" type="number" step="0.1"></label>
+  <label>最低ROI %<input id="minRoi" type="number" step="1"></label>
+  <label>最低利益 ETH<input id="minProfit" type="number" step="0.0005"></label>
+  <label>許容Sunrise Tax %<input id="maxTax" type="number" step="0.5"></label>
+  <label>Token→NFT 必要Token<input id="tokenToNftQty" type="number" step="1000"></label>
+  <label>NFT→Token 受取Token<input id="nftToTokenQty" type="number" step="1000"></label>
+  <label>プールFee %<input id="poolFee" type="number" step="0.1"></label>
+  <label>Quote余裕 %<input id="quoteBuffer" type="number" step="0.5"></label>
+  <label>Anvil/Network費 ETH<input id="anvilGas" type="number" step="0.00001"></label>
+  <label>NFT売買予備費 ETH<input id="nftGas" type="number" step="0.00001"></label>
+  <label>自動更新 秒<input id="refreshSec" type="number" step="5"></label>
+ </div>
+ <details><summary>診断データ</summary><pre id="diag">—</pre></details>
 </dialog>
 
 <script>
-const MCP='https://laura.stonkbrokers.io/api/mcp';
-const F=[
- {name:'Ghosts',sym:'GHST',a:['ghosts','ghost','ghst']},
- {name:'Knights',sym:'KNGHT',a:['knights','knight','knght']},
- {name:'Zombies',sym:'ZMBI',a:['zombies','zombie','zmbi']},
- {name:'Watchers',sym:'WATCH',a:['watchers','watcher','watch']}
+const MCP = "https://laura.stonkbrokers.io/api/mcp";
+const FACTIONS = [
+ {id:"ghosts",name:"Ghosts",sym:"GHST"},
+ {id:"watchers",name:"Watchers",sym:"WATCH"},
+ {id:"knights",name:"Knights",sym:"KNGHT"},
+ {id:"zombies",name:"Zombies",sym:"ZMBI"}
 ];
-const D={sellerFee:6,minRoi:15,tokenToNftQty:1105000,nftToTokenQty:895000,anvilGas:.00082,nftGas:.0002,quoteBuffer:5,refreshSec:30};
-let c={...D,...JSON.parse(localStorage.getItem('nsCfg')||'{}')},timer,raw={};
+const DEFAULTS = {
+ sellerFee:6, minRoi:10, minProfit:0.002, maxTax:2,
+ tokenToNftQty:1105000, nftToTokenQty:895000,
+ poolFee:1, quoteBuffer:1.5, anvilGas:0.00082, nftGas:0.0002, refreshSec:30
+};
+let cfg = {...DEFAULTS, ...JSON.parse(localStorage.getItem("nsScannerCfg") || "{}")};
+let timer = null, lastRaw = {};
 
-const n=v=>{if(typeof v==='number')return v;if(typeof v!=='string')return NaN;const m=v.replace(/,/g,'').match(/-?\d+(?:\.\d+)?(?:e[-+]?\d+)?/i);return m?+m[0]:NaN};
-const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-const walk=(o,fn)=>{if(!o||typeof o!=='object')return;fn(o);Object.values(o).forEach(v=>{if(v&&typeof v==='object')walk(v,fn)})};
-const walkp=(o,fn,path=[])=>{if(!o||typeof o!=='object')return;fn(o,path);if(Array.isArray(o))o.forEach((v,i)=>{if(v&&typeof v==='object')walkp(v,fn,path.concat(String(i)))});else Object.entries(o).forEach(([k,v])=>{if(v&&typeof v==='object')walkp(v,fn,path.concat(k))})};
-const txt=o=>Object.entries(o||{}).filter(([,v])=>typeof v!=='object').map(([k,v])=>k+':'+v).join(' ').toLowerCase();
-const fmt=v=>Number.isFinite(v)?v.toFixed(4)+' Ξ':'—';
-const pct=v=>Number.isFinite(v)?(v*100).toFixed(1)+'%':'—';
+const fmtEth = v => Number.isFinite(v) ? v.toFixed(4) + " Ξ" : "—";
+const fmtPct = v => Number.isFinite(v) ? (v*100).toFixed(1) + "%" : "—";
+const cls = v => v > 0 ? "green" : v < 0 ? "red" : "";
 
-function payload(j){
- const r=j?.result;
- if(r?.structuredContent)return r.structuredContent;
- if(Array.isArray(r?.content)){for(const x of r.content){if(x?.text){try{return JSON.parse(x.text)}catch(e){}}}return {text:r.content.map(x=>x.text||'').join('\n')}}
- return r||j;
+function extractPayload(j){
+ const r = j && j.result;
+ if (r && r.structuredContent) return r.structuredContent;
+ const text = r && Array.isArray(r.content) && r.content.find(x => x && x.text)?.text;
+ if (text) { try { return JSON.parse(text); } catch(e) {} }
+ return null;
 }
-async function mcp(name){
- const id=Date.now()+Math.floor(Math.random()*1000);
- const ac=new AbortController();
- const to=setTimeout(()=>ac.abort('timeout'),12000);
+async function fetchNightshades(){
+ const controller = new AbortController();
+ const timeout = setTimeout(() => controller.abort(), 10000);
  try{
-   const r=await fetch(MCP,{
-     method:'POST',
-     headers:{'content-type':'application/json','accept':'application/json, text/event-stream'},
-     body:JSON.stringify({jsonrpc:'2.0',id,method:'tools/call',params:{name,arguments:{}}}),
-     signal:ac.signal
-   });
-   if(!r.ok)throw Error(name+' HTTP '+r.status);
-   const ct=(r.headers.get('content-type')||'').toLowerCase();
-
-   // MCP Streamable HTTP may answer as SSE. Safari waits forever if we call r.json()
-   // on an open event stream, so read the first complete JSON-RPC event and cancel.
-   if(ct.includes('text/event-stream')){
-     const reader=r.body.getReader();
-     const dec=new TextDecoder();
-     let buf='';
-     while(true){
-       const {value,done}=await reader.read();
-       if(done)break;
-       buf+=dec.decode(value,{stream:true});
-       const blocks=buf.split(/\n\n|\r\n\r\n/);
-       buf=blocks.pop()||'';
-       for(const block of blocks){
-         for(const line of block.split(/\r?\n/)){
-           if(!line.startsWith('data:'))continue;
-           const raw=line.slice(5).trim();
-           if(!raw||raw==='[DONE]')continue;
-           let j;
-           try{j=JSON.parse(raw)}catch(e){continue}
-           if(j && (j.id===id || j.result || j.error)){
-             try{await reader.cancel()}catch(e){}
-             if(j.error)throw Error(j.error.message||name+' error');
-             return {raw:j,data:payload(j)};
-           }
-         }
-       }
-     }
-     throw Error(name+' SSE response ended without data');
-   }
-
-   const j=await r.json();
-   if(j.error)throw Error(j.error.message||name+' error');
-   return {raw:j,data:payload(j)};
- }catch(e){
-   if(e?.name==='AbortError' || String(e).includes('timeout')) throw Error(name+' timeout / Safari接続失敗');
-   throw e;
- }finally{clearTimeout(to)}
+  const res = await fetch(MCP, {
+   method:"POST",
+   headers:{"content-type":"application/json","accept":"application/json"},
+   body:JSON.stringify({jsonrpc:"2.0",id:Date.now(),method:"tools/call",params:{name:"nightshades",arguments:{}}}),
+   signal:controller.signal,
+   cache:"no-store"
+  });
+  if(!res.ok) throw new Error("MCP HTTP " + res.status);
+  const j = await res.json();
+  if(j.error) throw new Error(j.error.message || "MCP error");
+  const data = extractPayload(j);
+  if(!data?.live?.factions) throw new Error("Nightshades liveデータ形式不一致");
+  return {data, raw:j};
+ } finally { clearTimeout(timeout); }
 }
-function factionObj(root,f){
- let best=null,score=-1;
- walkp(root,(o,path)=>{
-   const p=path.map(norm).join(' '), t=(p+' '+txt(o)).toLowerCase(); let sc=0;
-   f.a.forEach(a=>{if(t.includes(a))sc+=7});
-   const ks=Object.keys(o).map(norm).join(' ');
-   if(/price|token|pool|market|tax|liquid|mcap|weth/.test(ks))sc+=4;
-   if(Object.keys(o).length<35)sc+=2;
-   if(sc>score){score=sc;best=o}
- });
- return score>=7?best:root;
+async function fetchFloors(){
+ const res = await fetch("./floors.json?t=" + Date.now(), {cache:"no-store"});
+ if(!res.ok) throw new Error("floors.json HTTP " + res.status);
+ const j = await res.json();
+ return j;
 }
-function vals(root){
- let a=[];
- walkp(root,(o,path)=>Object.entries(o).forEach(([k,v])=>{
-   if(typeof v!=='object')a.push({k:norm(k),path:path.map(norm).join(' '),v})
- }));
- return a
-}
-function pick(root,res){
- const a=vals(root);let b=null,bs=-1;
- for(const x of a){const target=x.path+' '+x.k;let sc=0;res.forEach((r,i)=>{if(r.test(target))sc+=10-i});if(sc>bs){bs=sc;b=x}}
- return bs>0?b:null;
-}
-function parseState(root,f){
- const o=factionObj(root,f);
- const pe=pick(o,[/priceweth/,/wethprice/,/priceeth/,/ethprice/]);
- const pu=pick(o,[/priceusd/,/usdprice/]);
- const pg=pick(o,[/^price$/,/tokenprice/]);
- const tax=pick(o,[/taxbps/,/taxpercent/,/^tax$/,/antisnipe/]);
- return {priceEth:pe?n(pe.v):NaN,priceUsd:pu?n(pu.v):NaN,price:pg?n(pg.v):NaN,tax:tax?n(tax.v):NaN};
-}
-function parseFloor(root,f){
- let list=[];
- walkp(root,(o,path)=>{
-   const context=(path.join(' ')+' '+txt(o)).toLowerCase();
-   if(!f.a.some(a=>context.includes(a)))return;
-   for(const [k,v] of Object.entries(o)){
-     const nk=norm(k);
-     if(typeof v!=='object' && nk.includes('floor')) list.push({v:n(v),k:nk,score:(nk.includes('eth')||nk.includes('weth')?20:10)+(Object.keys(o).length<30?2:0)});
-     if(v&&typeof v==='object'&&nk.includes('floor')){
-       for(const [kk,vv] of Object.entries(v)) if(typeof vv!=='object') list.push({v:n(vv),k:norm(kk),score:(/eth|weth|native/.test(norm(kk))?24:8)});
-     }
-   }
- });
- list=list.filter(x=>Number.isFinite(x.v)&&x.v>0&&x.v<100).sort((a,b)=>b.score-a.score);
- return list[0]?.v??NaN;
-}
-function quote(st){
- let p=st.priceEth;
- if(!Number.isFinite(p)&&Number.isFinite(st.price)&&st.price<.01)p=st.price;
- if(!Number.isFinite(p))return {buy:NaN,sell:NaN,src:'NO QUOTE'};
- const b=c.quoteBuffer/100;
- return {buy:c.tokenToNftQty*p*(1+b),sell:c.nftToTokenQty*p*(1-b),src:'ESTIMATE'};
-}
-function calc(f,floor,q,st){
- const tCost=q.buy+c.anvilGas, tRet=floor*(1-c.sellerFee/100)-c.nftGas;
- const nCost=floor+c.anvilGas+c.nftGas, nRet=q.sell;
- return {f,floor,q,st,
-  t:{cost:tCost,ret:tRet,profit:tRet-tCost,roi:(tRet-tCost)/tCost},
-  n:{cost:nCost,ret:nRet,profit:nRet-nCost,roi:(nRet-nCost)/nCost}
+function quoteFromSpot(price, taxFraction){
+ const buyOverhead = cfg.poolFee/100 + cfg.quoteBuffer/100 + taxFraction;
+ const sellOverhead = cfg.poolFee/100 + cfg.quoteBuffer/100 + taxFraction;
+ return {
+  buy: cfg.tokenToNftQty * price * (1 + buyOverhead),
+  sell: cfg.nftToTokenQty * price * Math.max(0, 1 - sellOverhead)
  };
 }
-function rc(r){return Number.isFinite(r.roi)&&r.roi>=c.minRoi/100?'go':''}
-function route(title,r){
- const cls=r.roi>=c.minRoi/100?'green':r.roi>=0?'yellow':'red';
- return '<div class="route '+rc(r)+'"><div class="rtitle">'+title+'</div><div class="line"><span>投入</span><b>'+fmt(r.cost)+'</b></div><div class="line"><span>回収</span><b>'+fmt(r.ret)+'</b></div><div class="line"><span>利益</span><b class="'+(r.profit>=0?'green':'red')+'">'+fmt(r.profit)+'</b></div><div class="roi '+cls+'">'+pct(r.roi)+'</div></div>';
+function calcRoute(f, liveRow, floor, globalLive){
+ const price = Number(liveRow.priceEth);
+ const tax = Number(globalLive.snipeTaxBps || 0) / 10000;
+ const q = quoteFromSpot(price, tax);
+ const blocked = !!globalLive.nightActive || tax > cfg.maxTax/100;
+ const tCost = q.buy + cfg.anvilGas;
+ const tReturn = floor * (1 - cfg.sellerFee/100) - cfg.nftGas;
+ const tProfit = tReturn - tCost;
+ const nCost = floor + cfg.nftGas + cfg.anvilGas;
+ const nReturn = q.sell;
+ const nProfit = nReturn - nCost;
+ return {
+  f, liveRow, floor, price, tax, blocked, q,
+  tokenToNft:{cost:tCost,ret:tReturn,profit:tProfit,roi:tProfit/tCost},
+  nftToToken:{cost:nCost,ret:nReturn,profit:nProfit,roi:nProfit/nCost}
+ };
 }
-function render(rows){
- cards.innerHTML=rows.map(x=>{
-   let tax='Tax —';if(Number.isFinite(x.st.tax)){let z=x.st.tax;if(z>100)z/=100;tax='Tax '+z.toFixed(z<10?1:0)+'%'}
-   return '<article class="card"><div class="head"><div><span class="f">'+x.f.name+'</span><span class="sym">'+x.f.sym+'</span></div><span class="pill">'+tax+'</span></div><div class="body"><div class="stats"><div class="s"><span>NFT Floor</span><b>'+fmt(x.floor)+'</b></div><div class="s"><span>1.105M買い</span><b>'+fmt(x.q.buy)+'</b></div><div class="s"><span>895k売り</span><b>'+fmt(x.q.sell)+'</b></div></div><div class="routes">'+route('Token → NFT → 売却',x.t)+route('NFT → Token → 売却',x.n)+'</div></div></article>'
- }).join('');
- let all=[];rows.forEach(x=>{all.push({f:x.f,d:'Token → NFT',...x.t,src:x.q.src});all.push({f:x.f,d:'NFT → Token',...x.n,src:x.q.src})});
- all=all.filter(x=>Number.isFinite(x.roi)).sort((a,b)=>b.roi-a.roi);const x=all[0];
- if(!x){best.textContent='判定材料不足';return}
- best.textContent=x.f.name+'：'+x.d;bp.textContent=fmt(x.profit);br.textContent=pct(x.roi);bc.textContent=fmt(x.cost);bv.textContent=fmt(x.ret);
- br.className=x.roi>=c.minRoi/100?'green':x.roi>=0?'yellow':'red';
+function isGo(r, blocked){
+ return !blocked && Number.isFinite(r.roi) && r.roi >= cfg.minRoi/100 && r.profit >= cfg.minProfit;
+}
+function routeHtml(title,r,blocked){
+ const go = isGo(r,blocked);
+ const wait = blocked;
+ const roiClass = wait ? "yellow" : r.roi >= cfg.minRoi/100 && r.profit > 0 ? "green" : r.roi >= 0 ? "yellow" : "red";
+ return `<div class="route ${go?"go":""} ${wait?"wait":""}">
+   <div class="rtitle">${title}</div>
+   <div class="line"><span>投入</span><b>${fmtEth(r.cost)}</b></div>
+   <div class="line"><span>回収</span><b>${fmtEth(r.ret)}</b></div>
+   <div class="line"><span>利益</span><b class="${cls(r.profit)}">${fmtEth(r.profit)}</b></div>
+   <div class="roi ${roiClass}">${wait?"待機":fmtPct(r.roi)}</div>
+  </div>`;
+}
+function cardHtml(x){
+ const stateClass = x.liveRow.isDamaged ? "dmg" : "win";
+ const stateText = x.liveRow.isDamaged ? "前回 Damage" : "前回 Survivor";
+ const taxText = "Tax " + (x.tax*100).toFixed(1) + "%";
+ return `<article class="card">
+  <div class="head"><div><span class="faction">${x.f.name}</span><span class="sym">${x.f.sym}</span></div><span class="pill">${taxText}</span></div>
+  <div class="body">
+   <div class="meta"><span class="pill ${stateClass}">${stateText}</span><span class="pill">Token ${x.price.toExponential(3)} ETH</span></div>
+   <div class="stats">
+    <div class="stat"><span>NFT Floor</span><b>${fmtEth(x.floor)}</b></div>
+    <div class="stat"><span>1.105M買い推定</span><b>${fmtEth(x.q.buy)}</b></div>
+    <div class="stat"><span>895k売り推定</span><b>${fmtEth(x.q.sell)}</b></div>
+   </div>
+   <div class="routes">
+    ${routeHtml("Token → NFT → 売却",x.tokenToNft,x.blocked)}
+    ${routeHtml("NFT → Token → 売却",x.nftToToken,x.blocked)}
+   </div>
+  </div>
+ </article>`;
+}
+function render(rows, live, floors){
+ document.getElementById("cards").innerHTML = rows.map(cardHtml).join("");
+ const routes = [];
+ for(const x of rows){
+  routes.push({f:x.f,dir:"Token → NFT",blocked:x.blocked,...x.tokenToNft});
+  routes.push({f:x.f,dir:"NFT → Token",blocked:x.blocked,...x.nftToToken});
+ }
+ const usable = routes.filter(x => !x.blocked && Number.isFinite(x.roi)).sort((a,b) => b.roi-a.roi);
+ const best = usable[0];
+ const bestName = document.getElementById("bestName");
+ if(!best){
+  bestName.textContent = live.nightActive ? "The Night中：待機" : "判定材料不足";
+  ["bestProfit","bestRoi","bestCost","bestReturn"].forEach(id=>document.getElementById(id).textContent="—");
+ } else {
+  const good = isGo(best,false);
+  bestName.textContent = (good ? "GO · " : "見送り · ") + best.f.name + " " + best.dir;
+  bestName.className = "bestName " + (good ? "green" : best.roi >= 0 ? "yellow" : "red");
+  document.getElementById("bestProfit").textContent=fmtEth(best.profit);
+  document.getElementById("bestProfit").className=cls(best.profit);
+  document.getElementById("bestRoi").textContent=fmtPct(best.roi);
+  document.getElementById("bestRoi").className=best.roi>=cfg.minRoi/100?"green":best.roi>=0?"yellow":"red";
+  document.getElementById("bestCost").textContent=fmtEth(best.cost);
+  document.getElementById("bestReturn").textContent=fmtEth(best.ret);
+ }
+ const ageMin = floors.updatedAt ? (Date.now()-Date.parse(floors.updatedAt))/60000 : NaN;
+ document.getElementById("bestNote").textContent =
+   "OpenSea Floor更新: " + (Number.isFinite(ageMin) ? Math.max(0,ageMin).toFixed(1)+"分前" : "不明") +
+   " / 次Night: " + (live.nextNightAt ? new Date(live.nextNightAt).toLocaleString("ja-JP") : "—");
 }
 async function refresh(){
- refBtn.disabled=true;status.textContent='取得中';dot.className='dot';
+ const btn=document.getElementById("refreshBtn");
+ btn.disabled=true; document.getElementById("statusText").textContent="取得中"; document.getElementById("dot").className="dot";
  try{
-   const [ns,nm]=await Promise.all([mcp('nightshades'),mcp('nft_market')]);raw={nightshades:ns.raw,nft_market:nm.raw};
-   const rows=F.map(f=>{const st=parseState(ns.data,f),floor=parseFloor(nm.data,f),q=quote(st);return calc(f,floor,q,st)});
-   render(rows);dot.className='dot ok';status.textContent='接続OK';detail.textContent='公式MCP自動取得 · Quoteはスポット推定';time.textContent=new Date().toLocaleTimeString('ja-JP');
-   diag.textContent=JSON.stringify({parsed:rows.map(x=>({faction:x.f.name,floor:x.floor,priceEth:x.st.priceEth,priceUsd:x.st.priceUsd,genericPrice:x.st.price,tax:x.st.tax,buy:x.q.buy,sell:x.q.sell})),raw},null,2);
- }catch(e){dot.className='dot badDot';status.textContent='取得エラー';detail.textContent=e.message;diag.textContent=String(e.stack||e)}
- refBtn.disabled=false;
+  const [nsResult, floorResult] = await Promise.allSettled([fetchNightshades(), fetchFloors()]);
+  if(nsResult.status!=="fulfilled") throw nsResult.reason;
+  const ns = nsResult.value;
+  const live = ns.data.live;
+  let floors = {floors:{}, updatedAt:null, complete:0};
+  let floorError = null;
+  if(floorResult.status==="fulfilled") floors=floorResult.value;
+  else floorError=String(floorResult.reason?.message || floorResult.reason);
+
+  const rows = FACTIONS.map(f=>{
+   const liveRow = live.factions.find(x=>x?.faction?.id===f.id);
+   const floor = Number(floors?.floors?.[f.id]);
+   if(!liveRow) throw new Error(f.name+" live data missing");
+   return calcRoute(f,liveRow,Number.isFinite(floor)&&floor>0?floor:NaN,live);
+  });
+  render(rows,live,floors);
+  const tokenCount=rows.filter(x=>Number.isFinite(x.price)).length;
+  const floorCount=rows.filter(x=>Number.isFinite(x.floor)).length;
+  document.getElementById("dot").className = "dot " + (tokenCount===4 && floorCount===4 ? "ok" : "");
+  document.getElementById("statusText").textContent = "Token " + tokenCount + "/4 · Floor " + floorCount + "/4";
+  document.getElementById("statusDetail").textContent =
+   "Tax " + ((live.snipeTaxBps||0)/100).toFixed(1) + "%" + (floorError ? " · Floor取得待ち" : "");
+  document.getElementById("updated").textContent = new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  lastRaw={parsed:rows.map(x=>({faction:x.f.id,priceEth:x.price,floor:x.floor,buyEstimate:x.q.buy,sellEstimate:x.q.sell,tax:x.tax})),live,floors,floorError};
+  document.getElementById("diag").textContent=JSON.stringify(lastRaw,null,2);
+ } catch(e){
+  document.getElementById("dot").className="dot bad";
+  document.getElementById("statusText").textContent="取得エラー";
+  document.getElementById("statusDetail").textContent=String(e.message||e);
+  document.getElementById("diag").textContent=String(e.stack||e);
+ } finally { btn.disabled=false; }
 }
-function save(){localStorage.setItem('nsCfg',JSON.stringify(c))}
-['sellerFee','minRoi','tokenToNftQty','nftToTokenQty','anvilGas','nftGas','quoteBuffer','refreshSec'].forEach(id=>{window[id].value=c[id];window[id].onchange=()=>{c[id]=+window[id].value;save();clearInterval(timer);timer=setInterval(refresh,Math.max(10,c.refreshSec)*1000);refresh()}});
-setBtn.onclick=()=>dlg.showModal();closeBtn.onclick=()=>dlg.close();refBtn.onclick=refresh;
-timer=setInterval(refresh,Math.max(10,c.refreshSec)*1000);refresh();
+function saveCfg(){localStorage.setItem("nsScannerCfg",JSON.stringify(cfg))}
+const configIds=["sellerFee","minRoi","minProfit","maxTax","tokenToNftQty","nftToTokenQty","poolFee","quoteBuffer","anvilGas","nftGas","refreshSec"];
+for(const id of configIds){
+ const el=document.getElementById(id); el.value=cfg[id];
+ el.addEventListener("change",()=>{cfg[id]=Number(el.value);saveCfg();startTimer();refresh()});
+}
+function startTimer(){clearInterval(timer);timer=setInterval(refresh,Math.max(10,cfg.refreshSec)*1000)}
+document.getElementById("settingsBtn").onclick=()=>document.getElementById("settingsDialog").showModal();
+document.getElementById("closeSettings").onclick=()=>document.getElementById("settingsDialog").close();
+document.getElementById("refreshBtn").onclick=refresh;
+startTimer(); refresh();
 </script>
 </body></html>
