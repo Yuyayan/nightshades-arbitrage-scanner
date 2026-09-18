@@ -132,25 +132,34 @@ async function fetchNightshades(){
  throw err||new Error("Tokenデータ取得失敗");
 }
 async function fetchMarket(){
- const urls=[
-  "https://nightshades-arbitrage-monitor-yuyas-projects-e92841bc.vercel.app/api/market?t="+Date.now(),
+ const liveUrl="https://nightshades-arbitrage-monitor-yuyas-projects-e92841bc.vercel.app/api/market?t="+Date.now();
+ let liveError=null;
+ try{
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);
+  try{
+   const res=await fetch(liveUrl,{cache:"no-store",signal:controller.signal});
+   if(!res.ok)throw new Error("Vercel LIVE HTTP "+res.status);
+   const data=await res.json();
+   data.fetchSource="live";
+   return data;
+  }finally{clearTimeout(timeout)}
+ }catch(e){liveError=String(e?.message||e)}
+ const cacheUrls=[
   "https://raw.githubusercontent.com/Yuyayan/nightshades-arbitrage-scanner/main/floors.json?t="+Date.now(),
   "./floors.json?t="+Date.now()
  ];
  let lastError=null;
- for(const url of urls){
+ for(const url of cacheUrls){
   try{
-   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),18000);
-   try{
-    const res=await fetch(url,{cache:"no-store",signal:controller.signal});
-    if(!res.ok)throw new Error("market HTTP "+res.status);
-    const data=await res.json();
-    data.fetchSource=url.includes("vercel.app")?"live":"cache";
-    return data;
-   }finally{clearTimeout(timeout)}
+   const res=await fetch(url,{cache:"no-store"});
+   if(!res.ok)throw new Error("cache HTTP "+res.status);
+   const data=await res.json();
+   data.fetchSource="cache";
+   data.liveError=liveError;
+   return data;
   }catch(e){lastError=e}
  }
- throw lastError||new Error("OpenSeaデータ取得失敗");
+ throw lastError||new Error("OpenSeaデータ取得失敗 / "+(liveError||"LIVE不明"));
 }
 function quoteFromSpot(price,taxFraction){
  const overhead=cfg.poolFee/100+cfg.quoteBuffer/100+taxFraction;
@@ -297,8 +306,8 @@ async function refresh(){
   if(!Number.isFinite(marketAge)||marketAge>cfg.maxMarketAgeMin){
    document.getElementById("dot").className="dot bad";
    document.getElementById("statusText").textContent="OpenSeaデータ古い";
-   document.getElementById("statusDetail").textContent=Number.isFinite(marketAge)?marketAge.toFixed(0)+"分前":"更新時刻不明";
-   stopUi("OpenSeaデータが古いため判定を止めています。","上限 "+cfg.maxMarketAgeMin+"分");
+   document.getElementById("statusDetail").textContent=(market.fetchSource==="live"?"LIVE":"CACHE")+" · "+(Number.isFinite(marketAge)?marketAge.toFixed(0)+"分前":"更新時刻不明");
+   stopUi("OpenSeaデータが古いため判定を止めています。",(market.fetchSource==="cache"&&market.liveError?("LIVE失敗: "+market.liveError+" / "):"")+"上限 "+cfg.maxMarketAgeMin+"分");
    document.getElementById("cards").innerHTML="";
    return;
   }
