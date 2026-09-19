@@ -1,16 +1,16 @@
 {
   "source": "OpenSea public collection data",
   "floors": {
-    "ghosts": 0.0609999,
-    "watchers": 0.066,
-    "knights": 0.05,
-    "zombies": 0.05402699
+    "ghosts": 0.0458012,
+    "watchers": 0.069,
+    "knights": 0.04229329,
+    "zombies": 0.0469999
   },
   "offers": {
-    "ghosts": 0.0364,
-    "watchers": 0.0331,
-    "knights": 0.0339,
-    "zombies": 0.0321
+    "ghosts": 0.0103,
+    "watchers": 0.0325,
+    "knights": 0.016,
+    "zombies": 0.0187
   },
   "creatorFeeBps": {
     "ghosts": 600,
@@ -18,8 +18,8 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-09-19T14:35:57.327236+00:00",
-  "checkedAt": "2026-09-19T14:35:57.327236+00:00",
+  "updatedAt": "2026-09-19T17:25:57.262359+00:00",
+  "checkedAt": "2026-09-19T17:25:57.262359+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {}
