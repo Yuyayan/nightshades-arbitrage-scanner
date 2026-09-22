@@ -3,14 +3,14 @@
   "floors": {
     "ghosts": 0.036,
     "watchers": 0.047,
-    "knights": 0.0288,
-    "zombies": 0.0263
+    "knights": 0.0217999,
+    "zombies": 0.025
   },
   "offers": {
-    "ghosts": 0.0141,
-    "watchers": 0.0143,
-    "knights": 0.0201,
-    "zombies": 0.0142
+    "ghosts": 0.0142,
+    "watchers": 0.0141,
+    "knights": 0.0124,
+    "zombies": 0.014
   },
   "creatorFeeBps": {
     "ghosts": 600,
@@ -18,8 +18,8 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-09-22T06:51:12.911189+00:00",
-  "checkedAt": "2026-09-22T06:51:12.911189+00:00",
+  "updatedAt": "2026-09-22T12:07:03.138878+00:00",
+  "checkedAt": "2026-09-22T12:07:03.138878+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {}
