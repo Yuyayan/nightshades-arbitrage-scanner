@@ -10,7 +10,7 @@
     "ghosts": 0.0065,
     "watchers": 0.0065,
     "knights": 0.0065,
-    "zombies": 0.0072
+    "zombies": 0.0075
   },
   "creatorFeeBps": {
     "ghosts": 600,
@@ -18,9 +18,11 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-10-04T21:24:43.305078+00:00",
-  "checkedAt": "2026-10-04T21:24:43.305078+00:00",
+  "updatedAt": "2026-10-05T00:02:29.791946+00:00",
+  "checkedAt": "2026-10-05T00:02:29.791946+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
-  "errors": {}
+  "errors": {
+    "zombies_stats": "HTTP Error 401: Unauthorized"
+  }
 }
