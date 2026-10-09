@@ -3,7 +3,7 @@
   "floors": {
     "ghosts": 0.013989999998,
     "watchers": 0.009949999999,
-    "knights": 0.0089099,
+    "knights": 0.0088209,
     "zombies": 0.010999999999
   },
   "offers": {
@@ -18,8 +18,8 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-10-08T20:09:33.726340+00:00",
-  "checkedAt": "2026-10-08T20:09:33.726340+00:00",
+  "updatedAt": "2026-10-09T00:20:47.859216+00:00",
+  "checkedAt": "2026-10-09T00:20:47.859216+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {}
