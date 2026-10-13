@@ -8,8 +8,8 @@
   },
   "offers": {
     "ghosts": 0.0031,
-    "watchers": 0.0035,
-    "knights": 0.0029,
+    "watchers": 0.0034,
+    "knights": 0.003,
     "zombies": 0.0028
   },
   "creatorFeeBps": {
@@ -18,8 +18,8 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-10-12T23:23:45.985371+00:00",
-  "checkedAt": "2026-10-12T23:23:45.985371+00:00",
+  "updatedAt": "2026-10-13T03:41:29.149637+00:00",
+  "checkedAt": "2026-10-13T03:41:29.149637+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {}
