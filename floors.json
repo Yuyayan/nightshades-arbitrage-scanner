@@ -19,8 +19,10 @@
     "zombies": 600
   },
   "updatedAt": "2026-10-16T05:10:18.066608+00:00",
-  "checkedAt": "2026-10-16T05:10:18.066608+00:00",
+  "checkedAt": "2026-10-16T09:46:37.558542+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
-  "errors": {}
+  "errors": {
+    "zombies_stats": "HTTP Error 401: Unauthorized"
+  }
 }
