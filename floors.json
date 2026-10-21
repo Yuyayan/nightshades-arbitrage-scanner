@@ -1,8 +1,8 @@
 {
   "source": "OpenSea public collection data",
   "floors": {
-    "ghosts": 0.01379,
-    "watchers": 0.005,
+    "ghosts": 0.0138,
+    "watchers": 0.004975,
     "knights": 0.0064999998999,
     "zombies": 0.0148454
   },
@@ -18,11 +18,11 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-10-20T23:14:28.324660+00:00",
-  "checkedAt": "2026-10-20T23:14:28.324660+00:00",
+  "updatedAt": "2026-10-21T01:38:10.580262+00:00",
+  "checkedAt": "2026-10-21T01:38:10.580262+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {
-    "watchers_stats": "HTTP Error 401: Unauthorized"
+    "ghosts_stats": "HTTP Error 401: Unauthorized"
   }
 }
