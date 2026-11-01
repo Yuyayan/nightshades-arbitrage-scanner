@@ -3,8 +3,8 @@
   "floors": {
     "ghosts": 0.00584361,
     "watchers": 0.003,
-    "knights": 0.0049988,
-    "zombies": 0.0053370499
+    "knights": 0.0049987,
+    "zombies": 0.00524867
   },
   "offers": {
     "ghosts": 0.0026,
@@ -18,11 +18,12 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-11-01T19:25:27.495576+00:00",
-  "checkedAt": "2026-11-01T19:25:27.495576+00:00",
+  "updatedAt": "2026-11-01T22:56:34.443118+00:00",
+  "checkedAt": "2026-11-01T22:56:34.443118+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {
+    "ghosts_stats": "HTTP Error 401: Unauthorized",
     "ghosts_html": "HTTP Error 403: Forbidden",
     "watchers_html": "HTTP Error 403: Forbidden",
     "knights_html": "HTTP Error 403: Forbidden",
