@@ -1,10 +1,10 @@
 {
   "source": "OpenSea public collection data",
   "floors": {
-    "ghosts": 0.00499999,
-    "watchers": 0.003199998996,
-    "knights": 0.0045999,
-    "zombies": 0.00477293
+    "ghosts": 0.004999989999,
+    "watchers": 0.003199998995,
+    "knights": 0.0045989,
+    "zombies": 0.0047673
   },
   "offers": {
     "ghosts": 0.0026,
@@ -18,18 +18,14 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-11-07T14:24:53.294984+00:00",
-  "checkedAt": "2026-11-07T18:57:34.806722+00:00",
+  "updatedAt": "2026-11-07T22:30:16.109664+00:00",
+  "checkedAt": "2026-11-07T22:30:16.109664+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {
-    "ghosts_stats": "HTTP Error 401: Unauthorized",
     "ghosts_html": "HTTP Error 403: Forbidden",
-    "watchers_stats": "HTTP Error 401: Unauthorized",
     "watchers_html": "HTTP Error 403: Forbidden",
-    "knights_stats": "HTTP Error 401: Unauthorized",
     "knights_html": "HTTP Error 403: Forbidden",
-    "zombies_stats": "HTTP Error 401: Unauthorized",
     "zombies_html": "HTTP Error 403: Forbidden"
   }
 }
