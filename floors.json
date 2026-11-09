@@ -4,7 +4,7 @@
     "ghosts": 0.00499997,
     "watchers": 0.003184,
     "knights": 0.0045999,
-    "zombies": 0.0046792
+    "zombies": 0.00463223
   },
   "offers": {
     "ghosts": 0.0026,
@@ -18,8 +18,8 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-11-09T02:30:31.460272+00:00",
-  "checkedAt": "2026-11-09T02:30:31.460272+00:00",
+  "updatedAt": "2026-11-09T10:12:03.446928+00:00",
+  "checkedAt": "2026-11-09T10:12:03.446928+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {
