@@ -1,10 +1,10 @@
 {
   "source": "OpenSea public collection data",
   "floors": {
-    "ghosts": 0.00377573,
+    "ghosts": 0.00370855,
     "watchers": 0.00261023,
-    "knights": 0.00330495,
-    "zombies": 0.00280156
+    "knights": 0.00328833,
+    "zombies": 0.00275569
   },
   "offers": {
     "ghosts": 0.0026,
@@ -18,12 +18,11 @@
     "knights": 600,
     "zombies": 600
   },
-  "updatedAt": "2026-11-15T19:31:36.499418+00:00",
-  "checkedAt": "2026-11-15T19:31:36.499418+00:00",
+  "updatedAt": "2026-11-15T23:29:48.419629+00:00",
+  "checkedAt": "2026-11-15T23:29:48.419629+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {
-    "ghosts_stats": "HTTP Error 401: Unauthorized",
     "ghosts_html": "HTTP Error 403: Forbidden",
     "watchers_html": "HTTP Error 403: Forbidden",
     "knights_html": "HTTP Error 403: Forbidden",
