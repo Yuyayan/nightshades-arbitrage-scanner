@@ -19,14 +19,15 @@
     "zombies": 600
   },
   "updatedAt": "2026-11-27T22:49:58.841580+00:00",
-  "checkedAt": "2026-11-27T22:49:58.841580+00:00",
+  "checkedAt": "2026-11-28T04:20:40.020556+00:00",
   "floorComplete": 4,
   "offerComplete": 4,
   "errors": {
     "ghosts_html": "HTTP Error 403: Forbidden",
+    "watchers_stats": "HTTP Error 401: Unauthorized",
     "watchers_html": "HTTP Error 403: Forbidden",
+    "knights_stats": "HTTP Error 401: Unauthorized",
     "knights_html": "HTTP Error 403: Forbidden",
-    "zombies_stats": "HTTP Error 401: Unauthorized",
     "zombies_html": "HTTP Error 403: Forbidden"
   }
 }
